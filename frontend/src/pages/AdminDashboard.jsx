@@ -29,7 +29,7 @@ const AdminDashboard = () => {
       if (requestData.type === 'Status Update') details.new_status = requestData.value;
 
       await api.post('/requests', {
-        manager_id: selectedManager.id || selectedManager.email, // Handle dummy or real
+        manager_id: selectedManager.id,
         project_id: selectedProject.id,
         request_type: requestData.type,
         details
@@ -73,23 +73,18 @@ const AdminDashboard = () => {
     </div>
   );
 
-  // Group real projects by manager
+  // Group real projects by manager directly from synchronized database
   const groupedManagers = users
     .filter(u => u.role === 'Manager')
     .map(manager => {
       const managerProjects = projects.filter(p => p.owner_id === manager.id);
       
-      // If manager has no projects, we'll provide sample ones for the demo to keep it high-fidelity
-      const displayProjects = managerProjects.length > 0 ? managerProjects.map(p => ({
+      const displayProjects = managerProjects.map(p => ({
         id: p.id,
         name: p.name,
-        description: p.description || 'System-level initiative.',
-        members: ['Rahul Gupta', 'Neha Singh'] // Hardcoded members for demo
-      })) : (manager.full_name === 'Rajesh Kumar' || manager.full_name === 'Manager' ? [
-        { id: 'p1', name: 'Horizon AI', description: 'Real-time predictive analytics engine.', members: ['Rahul Gupta', 'Neha Singh'] },
-        { id: 'p2', name: 'Alpha Platform', description: 'Next-gen AI platform architecture.', members: ['Rahul Gupta', 'Vikram Reddy'] },
-        { id: 'p3', name: 'Beta Initiative', description: 'Marketing rollout for Beta phase.', members: ['Sneha Joshi', 'Vikram Reddy'] }
-      ] : []);
+        description: p.description || 'Strategic initiative.',
+        members: Array.isArray(p.team_members) ? p.team_members.map(tm => tm.full_name) : []
+      }));
 
       return {
         ...manager,
@@ -97,18 +92,6 @@ const AdminDashboard = () => {
       };
     })
     .filter(m => m.projects.length > 0);
-
-  // Fallback for Priya Sharma if not in DB
-  if (groupedManagers.length < 2) {
-    groupedManagers.push({ 
-      full_name: 'Priya Sharma', 
-      email: 'priya@projectflow.io', 
-      projects: [
-        { id: 'p4', name: 'Z-Cloud Engine', description: 'Cloud infrastructure scaling.', members: ['Amitabh V.', 'Ishita Sharma'] },
-        { id: 'p5', name: 'Gamma Project', description: 'Infrastructure security overhaul.', members: ['Amitabh V.', 'Kunal Kapoor'] }
-      ]
-    });
-  }
 
   return (
     <div className="max-w-[1500px] mx-auto pb-20 px-4 space-y-12">
@@ -124,7 +107,7 @@ const AdminDashboard = () => {
             <div className="space-y-2">
               <h2 className="text-5xl font-black tracking-tighter text-white">Global Command</h2>
               <p className="text-gray-400 text-xl font-medium max-w-lg leading-relaxed">
-                Platform is optimized. Monitoring <span className="text-white">{groupedManagers.length} Managers</span> and <span className="text-white">{groupedManagers.reduce((acc, m) => acc + m.projects.length, 0)} total projects</span>.
+                Platform is synchronized. Monitoring <span className="text-white">{groupedManagers.length} Managers</span> and <span className="text-white">{groupedManagers.reduce((acc, m) => acc + m.projects.length, 0)} total projects</span> across the organization.
               </p>
             </div>
             <div className="flex gap-4 pt-4">
@@ -156,7 +139,7 @@ const AdminDashboard = () => {
                  <Users className="w-6 h-6" />
               </div>
               <div>
-                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{stats?.totalUsers || 32}</p>
+                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{stats?.totalUsers || users.length || 5}</p>
                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Global Workforce</p>
               </div>
            </div>
@@ -189,7 +172,7 @@ const AdminDashboard = () => {
               transition={{ delay: mIdx * 0.1 }}
               className="bg-white border-2 border-blue-600 rounded-3xl p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-10 relative overflow-hidden"
             >
-              {/* Left Highlight Bar like Reference */}
+              {/* Left Highlight Bar */}
               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
 
               <div className="flex items-center justify-between">
@@ -208,7 +191,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {manager.projects.map((proj, pIdx) => (
+                {manager.projects.map((proj) => (
                   <motion.div
                     key={proj.id}
                     className="bg-gray-50/30 border border-gray-100 rounded-2xl p-6 space-y-6 hover:shadow-lg transition-all group"
@@ -280,7 +263,7 @@ const AdminDashboard = () => {
                       <select 
                         value={requestData.type}
                         onChange={(e) => setRequestData({ ...requestData, type: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-50 transition-all outline-none"
                       >
                          <option>Deadline Extension</option>
                          <option>Status Update</option>
@@ -352,9 +335,9 @@ const AdminDashboard = () => {
          
          <div className="space-y-4">
             {[
-              { type: 'DEPL', text: 'New build deployed for "Horizon AI" by System Admin', time: '12m ago', color: 'bg-blue-500' },
+              { type: 'DEPL', text: 'New build deployed for "Horizon AI Integration" by System Admin', time: '12m ago', color: 'bg-blue-500' },
               { type: 'AUTH', text: 'Security override successful on cluster-04', time: '45m ago', color: 'bg-purple-500' },
-              { type: 'PROJ', text: 'Project "Genesis" archive requested by Manager', time: '2h ago', color: 'bg-amber-500' },
+              { type: 'PROJ', text: 'Project "Genesis Project" archive requested by Manager', time: '2h ago', color: 'bg-amber-500' },
               { type: 'SYS', text: 'Daily database integrity check completed successfully', time: '4h ago', color: 'bg-emerald-500' }
             ].map((log, i) => (
               <div key={i} className="flex items-center gap-6 p-4 hover:bg-gray-50 rounded-2xl transition-colors cursor-default border border-transparent hover:border-gray-100">

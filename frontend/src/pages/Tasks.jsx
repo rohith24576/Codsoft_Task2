@@ -3,7 +3,7 @@ import api from '../services/api';
 import { 
   Plus, Search, Filter, MoreHorizontal, 
   Calendar, Flag, Layers, CheckCircle2,
-  Clock, AlertCircle, Trash2
+  Clock, AlertCircle, Trash2, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -11,18 +11,21 @@ import clsx from 'clsx';
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '' });
+  const [newTask, setNewTask] = useState({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '', assignee_id: '' });
 
   const fetchTasks = async () => {
     try {
-      const [taskRes, projRes] = await Promise.all([
+      const [taskRes, projRes, usersRes] = await Promise.all([
         api.get('/tasks'),
-        api.get('/projects')
+        api.get('/projects'),
+        api.get('/admin/users').catch(() => ({ data: [] })) // Graceful fallback if Member
       ]);
       setTasks(taskRes.data);
       setProjects(projRes.data);
+      if (usersRes?.data) setUsers(usersRes.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -48,7 +51,7 @@ const Tasks = () => {
     try {
       await api.post('/tasks', newTask);
       setShowCreateModal(false);
-      setNewTask({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '' });
+      setNewTask({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '', assignee_id: '' });
       fetchTasks();
     } catch (error) {
       console.error('Failed to create task');
@@ -120,7 +123,7 @@ const Tasks = () => {
                     {tasks.filter(t => t.status === col.id).length}
                   </span>
                </div>
-               <button className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+               <button onClick={() => setShowCreateModal(true)} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
                   <Plus className="w-4 h-4" />
                </button>
             </div>
@@ -167,19 +170,23 @@ const Tasks = () => {
                      </p>
 
                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                           <Layers className="w-3.5 h-3.5" />
-                           {projects.find(p => p.id === task.project_id)?.name || 'ProjectFlow'}
+                        <div className="flex items-center justify-between text-xs font-bold text-gray-500">
+                           <div className="flex items-center gap-1.5">
+                             <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                             {projects.find(p => p.id === task.project_id)?.name || task.project_name || 'ProjectFlow'}
+                           </div>
+                           <div className="flex items-center gap-1 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-100">
+                             <User className="w-3 h-3 text-gray-400" />
+                             <span className="text-[10px] text-gray-600 font-bold">{task.assignee_name || 'Unassigned'}</span>
+                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-gray-50">
                            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                               <Calendar className="w-3 h-3" />
                               {task.deadline ? new Date(task.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No Due Date'}
                            </div>
-                           <div className="flex -space-x-1.5">
-                              <div className="w-6 h-6 rounded-full bg-indigo-600 text-white border-2 border-white flex items-center justify-center text-[8px] font-black shadow-sm">
-                                {task.assignee_id ? 'U' : 'A'}
-                              </div>
+                           <div className="w-6 h-6 rounded-full bg-indigo-600 text-white border-2 border-white flex items-center justify-center text-[8px] font-black shadow-sm">
+                             {task.assignee_name ? task.assignee_name[0] : 'U'}
                            </div>
                         </div>
                      </div>
@@ -273,14 +280,27 @@ const Tasks = () => {
                    </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Deadline</label>
-                  <input 
-                    type="date"
-                    value={newTask.deadline}
-                    onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
-                    className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Assignee</label>
+                      <select 
+                        value={newTask.assignee_id}
+                        onChange={(e) => setNewTask({ ...newTask, assignee_id: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                      >
+                         <option value="">Select Assignee</option>
+                         {users.map(u => <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>)}
+                      </select>
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Deadline</label>
+                      <input 
+                        type="date"
+                        value={newTask.deadline}
+                        onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">

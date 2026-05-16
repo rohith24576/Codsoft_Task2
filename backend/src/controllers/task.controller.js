@@ -5,7 +5,7 @@ export const createTask = async (req, res) => {
   try {
     const result = await pool.query(
       'INSERT INTO tasks (project_id, title, description, status, priority, assignee_id, deadline) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [project_id, title, description, status || 'To Do', priority || 'Medium', assignee_id, deadline]
+      [project_id, title, description, status || 'To Do', priority || 'Medium', assignee_id || req.user.id, deadline]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -15,7 +15,31 @@ export const createTask = async (req, res) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM tasks WHERE assignee_id = $1', [req.user.id]);
+    let result;
+    if (req.user.role === 'Admin') {
+      result = await pool.query(`
+        SELECT t.*, p.name as project_name, u.full_name as assignee_name 
+        FROM tasks t 
+        LEFT JOIN projects p ON t.project_id = p.id 
+        LEFT JOIN users u ON t.assignee_id = u.id
+      `);
+    } else if (req.user.role === 'Manager') {
+      result = await pool.query(`
+        SELECT t.*, p.name as project_name, u.full_name as assignee_name 
+        FROM tasks t 
+        LEFT JOIN projects p ON t.project_id = p.id 
+        LEFT JOIN users u ON t.assignee_id = u.id 
+        WHERE p.owner_id = $1 OR p.id IN (SELECT project_id FROM team_members WHERE user_id = $1)
+      `, [req.user.id]);
+    } else {
+      result = await pool.query(`
+        SELECT t.*, p.name as project_name, u.full_name as assignee_name 
+        FROM tasks t 
+        LEFT JOIN projects p ON t.project_id = p.id 
+        LEFT JOIN users u ON t.assignee_id = u.id 
+        WHERE t.assignee_id = $1 OR t.project_id IN (SELECT project_id FROM team_members WHERE user_id = $1)
+      `, [req.user.id]);
+    }
     res.json(result.rows);
   } catch (error) {
     res.status(400).json({ message: error.message });
