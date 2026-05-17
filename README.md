@@ -10,6 +10,19 @@
 
 ---
 
+## 🌐 Live Production Ecosystem
+
+Experience the fully deployed ProjectFlow platform live. Our architecture is globally distributed across top-tier cloud providers for maximum speed, reliability, and enterprise-grade security.
+
+| Architecture Layer | Cloud Provider | URL | Purpose & Capabilities |
+| :--- | :--- | :--- | :--- |
+| **🎨 Client Application** | **Vercel** | [https://project-flow-ochre.vercel.app/](https://project-flow-ochre.vercel.app/) | Global Edge CDN, instant page loads, and fully responsive VIP Gold & Charcoal UI. |
+| **🗄️ Database Grid** | **Supabase (PostgreSQL)** | Supabase Cloud Cluster | Fully managed cloud relational database ensuring secure user, project, and task persistence with ACID compliance. |
+
+> **💡 Demo Tip:** You can explore the platform instantly using the pre-configured demo accounts on the login portal—experience the Admin, Manager, and Member workspaces with a single click!
+
+---
+
 ## 💎 Premium UI & Brand Identity
 
 ProjectFlow is designed from the ground up to feel like an elite executive command center:
@@ -198,3 +211,43 @@ npm install
 npm run dev
 ```
 *Click the local URL (e.g., `http://localhost:5173`) in your terminal to open ProjectFlow in your browser!*
+
+---
+
+## 🤝 How to Contribute
+
+We love contributions! Follow these steps to help improve ProjectFlow:
+
+1. **Fork the Project**: Click the Fork button at the top of the repository.
+2. **Create a Feature Branch**: 
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. **Commit Your Changes**: Use descriptive commit messages:
+   ```bash
+   git commit -m "Add some AmazingFeature"
+   ```
+4. **Push to the Branch**:
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. **Open a Pull Request**: Submit your PR for review and we'll merge it after testing.
+
+### 📜 Contribution Rules:
+- Maintain consistent coding styles (ESLint/Prettier).
+- Document any new API endpoints in the README.
+- Ensure all new components are fully responsive.
+
+---
+
+## 👤 Developer Profile
+
+**Rohith**  
+*Lead Architect & Full Stack Developer*
+
+- **GitHub**: [@rohith24576](https://github.com/rohith24576)
+- **Portfolio**: [https://rohith24576.github.io/Rohithportfolio/](https://rohith24576.github.io/Rohithportfolio/)
+- **Email**: [rohithjayanthi06@gmail.com](mailto:rohithjayanthi06@gmail.com)
+
+---
+🏆 *Developed with passion for the Codsoft Web Development Fellowship.*
