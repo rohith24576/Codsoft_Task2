@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import CustomSelect from '../components/CustomSelect';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -21,7 +22,7 @@ const Tasks = () => {
       const [taskRes, projRes, usersRes] = await Promise.all([
         api.get('/tasks'),
         api.get('/projects'),
-        api.get('/admin/users').catch(() => ({ data: [] })) // Graceful fallback if Member
+        api.get('/projects/users').catch(() => ({ data: [] }))
       ]);
       setTasks(taskRes.data);
       setProjects(projRes.data);
@@ -97,128 +98,122 @@ const Tasks = () => {
             <input 
               type="text" 
               placeholder="Search tasks..."
-              className="pl-11 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none w-64 shadow-sm"
+              className="pl-11 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold focus: focus:ring-indigo-500 outline-none w-64 shadow-sm"
             />
           </div>
           <button 
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" /> New Task
           </button>
         </div>
       </div>
 
-      {/* Board Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {columns.map((col) => (
-          <div key={col.id} className="space-y-6">
-            <div className="flex items-center justify-between px-4">
-               <div className="flex items-center gap-3">
-                  <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center", col.bg)}>
-                     <col.icon className={clsx("w-4 h-4", col.color)} />
+      {/* Kanban Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {columns.map(col => {
+          const colTasks = tasks.filter(t => t.status === col.id);
+          return (
+            <div key={col.id} className="bg-gray-50/50 border border-gray-100/80 rounded-[2.5rem] p-6 space-y-6 flex flex-col min-h-[650px] shadow-xs">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 ${col.bg} ${col.color} rounded-2xl flex items-center justify-center font-bold shadow-xs`}>
+                    <col.icon className="w-5 h-5" />
                   </div>
-                  <h3 className="font-black text-gray-900 tracking-tight">{col.id}</h3>
-                  <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-                    {tasks.filter(t => t.status === col.id).length}
-                  </span>
-               </div>
-               <button onClick={() => setShowCreateModal(true)} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-                  <Plus className="w-4 h-4" />
-               </button>
+                  <h3 className="font-bold text-gray-900 text-base tracking-tight">{col.id}</h3>
+                </div>
+                <span className="px-3 py-1 bg-white border border-gray-200/80 rounded-xl text-xs font-black text-gray-600 shadow-xs">
+                  {colTasks.length}
+                </span>
+              </div>
+
+              <div className="space-y-4 flex-1 overflow-y-auto pr-1 no-scrollbar">
+                <AnimatePresence>
+                  {colTasks.length === 0 ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="h-40 border-2 border-dashed border-gray-200 rounded-[2rem] flex flex-col items-center justify-center text-gray-400 italic text-xs gap-2"
+                    >
+                      <AlertCircle className="w-5 h-5 opacity-40" />
+                      No tasks in {col.id.toLowerCase()}
+                    </motion.div>
+                  ) : (
+                    colTasks.map((task) => (
+                      <motion.div
+                        key={task.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="group bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all space-y-4 relative overflow-hidden"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={clsx(
+                              "px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
+                              task.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
+                              task.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                              'bg-blue-50 text-blue-600 border-blue-100'
+                            )}>
+                              {task.priority} Priority
+                            </span>
+                            <button 
+                              onClick={() => deleteTask(task.id)}
+                              className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all cursor-pointer"
+                              title="Delete Task"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors text-base tracking-tight">{task.title}</h4>
+                        </div>
+
+                        {task.description && (
+                          <p className="text-xs text-gray-400 leading-relaxed font-medium line-clamp-2">{task.description}</p>
+                        )}
+
+                        <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px]">
+                              {task.assignee_name ? task.assignee_name.charAt(0) : <User className="w-3.5 h-3.5" />}
+                            </div>
+                            <span className="text-xs font-bold text-gray-600 truncate max-w-[100px]">
+                              {task.assignee_name || 'Unassigned'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {col.id !== 'To Do' && (
+                              <button 
+                                onClick={() => handleUpdateStatus(task.id, col.id === 'Done' ? 'In Progress' : 'To Do')}
+                                className="px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-200/60 transition-all cursor-pointer"
+                              >
+                                ← Move
+                              </button>
+                            )}
+                            {col.id !== 'Done' && (
+                              <button 
+                                onClick={() => handleUpdateStatus(task.id, col.id === 'To Do' ? 'In Progress' : 'Done')}
+                                className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-bold border border-indigo-100 transition-all cursor-pointer"
+                              >
+                                Move →
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-
-            <div className="bg-gray-50/50 rounded-[2.5rem] p-4 min-h-[600px] border border-gray-100/50 space-y-4">
-               <AnimatePresence mode="popLayout">
-                 {tasks.filter(t => t.status === col.id).map((task) => (
-                   <motion.div
-                     layout
-                     key={task.id}
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     exit={{ opacity: 0, scale: 0.95 }}
-                     className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
-                   >
-                     {/* Priority Badge */}
-                     <div className="flex justify-between items-start mb-4">
-                        <span className={clsx(
-                          "px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                          task.priority === 'High' ? "bg-rose-50 text-rose-600 border-rose-100" :
-                          task.priority === 'Medium' ? "bg-amber-50 text-amber-600 border-amber-100" :
-                          "bg-indigo-50 text-indigo-600 border-indigo-100"
-                        )}>
-                          {task.priority}
-                        </span>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                           <button 
-                             onClick={() => deleteTask(task.id)}
-                             className="p-1.5 text-gray-400 hover:text-rose-500 rounded-lg hover:bg-rose-50"
-                           >
-                              <Trash2 className="w-3.5 h-3.5" />
-                           </button>
-                           <button className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
-                              <MoreHorizontal className="w-3.5 h-3.5" />
-                           </button>
-                        </div>
-                     </div>
-
-                     <h4 className="font-bold text-gray-900 leading-tight mb-2 group-hover:text-indigo-600 transition-colors">
-                       {task.title}
-                     </h4>
-                     <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-6">
-                       {task.description || 'No description provided for this task.'}
-                     </p>
-
-                     <div className="space-y-4">
-                        <div className="flex items-center justify-between text-xs font-bold text-gray-500">
-                           <div className="flex items-center gap-1.5">
-                             <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                             {projects.find(p => p.id === task.project_id)?.name || task.project_name || 'ProjectFlow'}
-                           </div>
-                           <div className="flex items-center gap-1 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-100">
-                             <User className="w-3 h-3 text-gray-400" />
-                             <span className="text-[10px] text-gray-600 font-bold">{task.assignee_name || 'Unassigned'}</span>
-                           </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                           <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                              <Calendar className="w-3 h-3" />
-                              {task.deadline ? new Date(task.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No Due Date'}
-                           </div>
-                           <div className="w-6 h-6 rounded-full bg-indigo-600 text-white border-2 border-white flex items-center justify-center text-[8px] font-black shadow-sm">
-                             {task.assignee_name ? task.assignee_name[0] : 'U'}
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* Quick Move Overlay */}
-                     <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-md translate-y-full group-hover:translate-y-0 transition-transform flex gap-1 justify-center border-t border-gray-100">
-                        {columns.filter(c => c.id !== task.status).map(c => (
-                          <button 
-                            key={c.id}
-                            onClick={() => handleUpdateStatus(task.id, c.id)}
-                            className="px-3 py-1 bg-white border border-gray-100 rounded-lg text-[9px] font-black text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all uppercase tracking-widest"
-                          >
-                             Move to {c.id}
-                          </button>
-                        ))}
-                     </div>
-                   </motion.div>
-                 ))}
-               </AnimatePresence>
-               
-               {tasks.filter(t => t.status === col.id).length === 0 && (
-                 <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 opacity-20">
-                    <AlertCircle className="w-10 h-10 text-gray-400" />
-                    <p className="text-sm font-bold text-gray-400">Column Empty</p>
-                 </div>
-               )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Task Creation Modal */}
+      {/* Create Task Modal */}
       <AnimatePresence>
         {showCreateModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -233,7 +228,7 @@ const Tasks = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8"
+              className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               <div className="space-y-2">
                 <h3 className="text-2xl font-black text-gray-900">Create New Task</h3>
@@ -252,68 +247,80 @@ const Tasks = () => {
                     className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
                   />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Project</label>
-                      <select 
-                        required
-                        value={newTask.project_id}
-                        onChange={(e) => setNewTask({ ...newTask, project_id: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                      >
-                         <option value="">Select Project</option>
-                         {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Priority</label>
-                      <select 
-                        value={newTask.priority}
-                        onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                      >
-                         <option>Low</option>
-                         <option>Medium</option>
-                         <option>High</option>
-                      </select>
-                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Assignee</label>
-                      <select 
-                        value={newTask.assignee_id}
-                        onChange={(e) => setNewTask({ ...newTask, assignee_id: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                      >
-                         <option value="">Select Assignee</option>
-                         {users.map(u => <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>)}
-                      </select>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Description</label>
+                  <textarea 
+                    rows={3}
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    placeholder="Provide detailed requirements..."
+                    className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none" 
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                      <CustomSelect 
+                        label="Project"
+                        value={newTask.project_id}
+                        onChange={(val) => setNewTask({ ...newTask, project_id: val })}
+                        options={projects.map(p => ({ value: p.id, label: p.name, sublabel: p.status }))}
+                        placeholder="Select Project"
+                      />
                    </div>
-                   <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Deadline</label>
-                      <input 
-                        type="date"
-                        value={newTask.deadline}
-                        onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                   <div>
+                      <CustomSelect 
+                        label="Priority"
+                        value={newTask.priority}
+                        onChange={(val) => setNewTask({ ...newTask, priority: val })}
+                        options={[
+                          { value: 'Low', label: 'Low', badge: 'Low' },
+                          { value: 'Medium', label: 'Medium', badge: 'Medium' },
+                          { value: 'High', label: 'High', badge: 'High' }
+                        ]}
                       />
                    </div>
                 </div>
 
-                <div className="flex gap-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                      <CustomSelect 
+                        label="Assignee"
+                        value={newTask.assignee_id}
+                        onChange={(val) => setNewTask({ ...newTask, assignee_id: val })}
+                        options={users.map(u => ({
+                          value: u.id,
+                          label: u.full_name || u.email.split('@')[0],
+                          sublabel: u.email,
+                          badge: u.role,
+                          avatar: (u.full_name || u.email).charAt(0)
+                        }))}
+                        placeholder="Select Assignee"
+                      />
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Deadline</label>
+                      <input 
+                        type="date"
+                        value={newTask.deadline}
+                        onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                   </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-gray-100">
                    <button 
                      type="button"
                      onClick={() => setShowCreateModal(false)}
-                     className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all"
+                     className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
                    >
                      Cancel
                    </button>
                    <button 
                      type="submit"
-                     className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
+                     className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer"
                    >
                      Create Task
                    </button>

@@ -4,6 +4,7 @@ import { Plus, Layers, Users, Calendar, Trash2, UserPlus, CheckCircle2, Zap, Bel
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import clsx from 'clsx';
+import CustomSelect from '../components/CustomSelect';
 
 const Projects = () => {
   const { user } = useAuth();
@@ -36,6 +37,9 @@ const Projects = () => {
       ]);
       setProjects(projRes.data);
       setAllUsers(usersRes.data);
+      if (projRes.data.length > 0) {
+        setSelectedManageProject(projRes.data[0].id);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -53,11 +57,11 @@ const Projects = () => {
         user_id: selectedAddUser,
         role: selectedAddRole
       });
-      showNotify('success', 'Team member added successfully!');
+      showNotify('success', 'Team member assigned successfully!');
+      await fetchProjects();
       setSelectedAddUser('');
-      fetchProjects();
     } catch (error) {
-      showNotify('error', 'Failed to add member: ' + error.message);
+      showNotify('error', error.response?.data?.message || 'Failed to assign member');
     } finally {
       setIsManagingMember(false);
     }
@@ -66,36 +70,57 @@ const Projects = () => {
   const handleRemoveMember = async (projectId, userId) => {
     try {
       await api.delete(`/projects/members/${projectId}/${userId}`);
-      showNotify('success', 'Team member removed successfully');
-      fetchProjects();
+      showNotify('success', 'Team member removed successfully!');
+      await fetchProjects();
     } catch (error) {
-      showNotify('error', 'Failed to remove member');
+      showNotify('error', error.response?.data?.message || 'Failed to remove member');
     }
   };
 
-  if (loading) return <div className="animate-pulse h-32 bg-gray-200 rounded-xl max-w-[1400px] mx-auto mt-10"></div>;
+  if (loading) return (
+    <div className="max-w-7xl mx-auto py-12 px-4 space-y-6 animate-pulse">
+      <div className="h-12 bg-gray-100 rounded-2xl w-1/4"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map(i => <div key={i} className="h-64 bg-gray-100 rounded-[2.5rem]"></div>)}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="max-w-[1400px] mx-auto py-8 px-4 space-y-10">
-      <div className="flex justify-between items-center mb-10">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Project Portfolio</h2>
-          <p className="text-sm text-gray-500 font-medium">Tracking {projects.length} strategic initiatives across the organization.</p>
+    <div className="max-w-[1400px] mx-auto pb-20 px-4 space-y-12">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
+        <div className="relative z-10 space-y-4 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-indigo-300 border border-white/10">
+            <Layers className="w-4 h-4" /> Portfolio Management
+          </div>
+          <h1 className="text-5xl font-black tracking-tight">Active Projects</h1>
+          <p className="text-gray-300 text-lg font-normal leading-relaxed">
+            Oversee project portfolios, track development timelines, and coordinate active team member allocations.
+          </p>
         </div>
-        <div className="flex gap-4">
+
+        <div className="relative z-10 flex flex-wrap gap-4 items-center">
           <button 
-            onClick={() => { if (projects.length > 0) setSelectedManageProject(projects[0].id); setShowMemberModal(true); }}
-            className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-2xl flex items-center gap-2 text-sm font-bold shadow-sm transition-all active:scale-95"
+            onClick={() => {
+              if (projects.length > 0) setSelectedManageProject(projects[0].id);
+              setShowMemberModal(true);
+            }}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-600/30 transition-all active:scale-95 group cursor-pointer"
           >
-            <Users className="w-4 h-4 text-indigo-600" /> Manage Team
-          </button>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 text-sm font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95">
-            <Plus className="w-4 h-4" /> New Project
+            <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            Manage Team
           </button>
         </div>
+
+        {/* Abstract Background Accents */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2"></div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {projects.map((project, idx) => (
           <motion.div
             key={project.id}
@@ -187,17 +212,18 @@ const Projects = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Select Project</label>
-                  <select 
+                <div>
+                  <CustomSelect 
+                    label="Select Project"
                     value={selectedManageProject}
-                    onChange={(e) => setSelectedManageProject(e.target.value)}
-                    className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                  >
-                    {projects.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedManageProject}
+                    options={projects.map(p => ({
+                      value: p.id,
+                      label: p.name,
+                      sublabel: p.status
+                    }))}
+                    placeholder="Select a Project"
+                  />
                 </div>
 
                 {/* Current Members List */}
@@ -222,7 +248,7 @@ const Projects = () => {
                           {tm.email !== user?.email && (
                             <button 
                               onClick={() => handleRemoveMember(selectedManageProject, tm.id)}
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
                               title="Remove Member"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -238,36 +264,37 @@ const Projects = () => {
                 <form onSubmit={handleAddMember} className="space-y-4 pt-6 border-t border-gray-100">
                   <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assign New Member</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Organization User</label>
-                      <select 
-                        required
+                    <div>
+                      <CustomSelect 
+                        label="Organization User"
                         value={selectedAddUser}
-                        onChange={(e) => setSelectedAddUser(e.target.value)}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                      >
-                        <option value="">Select User</option>
-                        {allUsers.map(u => (
-                          <option key={u.id} value={u.id}>{u.full_name || u.email} ({u.role})</option>
-                        ))}
-                      </select>
+                        onChange={setSelectedAddUser}
+                        options={allUsers.map(u => ({
+                          value: u.id,
+                          label: u.full_name || u.email.split('@')[0],
+                          sublabel: u.email,
+                          badge: u.role,
+                          avatar: (u.full_name || u.email).charAt(0)
+                        }))}
+                        placeholder="Select User"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Project Role</label>
-                      <select 
+                    <div>
+                      <CustomSelect 
+                        label="Project Role"
                         value={selectedAddRole}
-                        onChange={(e) => setSelectedAddRole(e.target.value)}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                      >
-                        <option value="Member">Member</option>
-                        <option value="Manager">Manager</option>
-                      </select>
+                        onChange={setSelectedAddRole}
+                        options={[
+                          { value: 'Member', label: 'Member', badge: 'Member' },
+                          { value: 'Manager', label: 'Manager', badge: 'Manager' }
+                        ]}
+                      />
                     </div>
                   </div>
                   <button 
                     type="submit"
                     disabled={isManagingMember}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4" /> {isManagingMember ? 'Assigning...' : 'Assign to Project'}
                   </button>

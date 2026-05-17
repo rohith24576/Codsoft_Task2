@@ -115,7 +115,7 @@ export const deleteProject = async (req, res) => {
 
 export const getAllOrgUsers = async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, full_name, email, role, avatar_url FROM users ORDER BY full_name');
+    const result = await pool.query("SELECT id, full_name, email, role, avatar_url FROM users WHERE role != 'Admin' ORDER BY full_name");
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
