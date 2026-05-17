@@ -113,11 +113,11 @@ CREATE TABLE public.comments (
 -- 10. Seed Initial Demo Accounts & Enterprise Data
 -- Note: Password is 'password123' hashed with bcrypt
 INSERT INTO public.users (id, email, full_name, password, role) VALUES
-('11111111-1111-1111-1111-111111111111', 'admin@projectflow.io', 'System Administrator', '$2a$10$Xm7V4P3I6U.Yv0.z8.H6u.z.D5y.Z6y.V8y.W7y.X8y.Y9y.Z0y', 'Admin'),
-('22222222-2222-2222-2222-222222222222', 'manager@projectflow.io', 'Rajesh Kumar', '$2a$10$Xm7V4P3I6U.Yv0.z8.H6u.z.D5y.Z6y.V8y.W7y.X8y.Y9y.Z0y', 'Manager'),
-('33333333-3333-3333-3333-333333333333', 'priya@projectflow.io', 'Priya Sharma', '$2a$10$Xm7V4P3I6U.Yv0.z8.H6u.z.D5y.Z6y.V8y.W7y.X8y.Y9y.Z0y', 'Manager'),
-('44444444-4444-4444-4444-444444444444', 'member@projectflow.io', 'Team Member', '$2a$10$Xm7V4P3I6U.Yv0.z8.H6u.z.D5y.Z6y.V8y.W7y.X8y.Y9y.Z0y', 'Member'),
-('55555555-5555-5555-5555-555555555555', 'neha@projectflow.io', 'Neha Singh', '$2a$10$Xm7V4P3I6U.Yv0.z8.H6u.z.D5y.Z6y.V8y.W7y.X8y.Y9y.Z0y', 'Member')
+('11111111-1111-1111-1111-111111111111', 'admin@projectflow.io', 'Rohith (Admin)', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Admin'),
+('22222222-2222-2222-2222-222222222222', 'manager@projectflow.io', 'Ramesh Kumar', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Manager'),
+('33333333-3333-3333-3333-333333333333', 'suresh@projectflow.io', 'Suresh Sharma', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Manager'),
+('44444444-4444-4444-4444-444444444444', 'member@projectflow.io', 'Rahul Varma', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Member'),
+('55555555-5555-5555-5555-555555555555', 'mukesh@projectflow.io', 'Mukesh Singh', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Member')
 ON CONFLICT (email) DO NOTHING;
 
 -- 11. Seed Projects

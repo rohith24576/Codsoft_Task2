@@ -2,66 +2,31 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Briefcase, CheckSquare, Activity, ClipboardList, Layers, 
-  Users, Zap, Target, ArrowUpRight, ListTodo, CheckCircle2,
-  Calendar, Search, Filter, MoreHorizontal, User,
-  Mail, ShieldCheck, Edit3
+  Briefcase, CheckCircle2, Activity, Layers, 
+  Users, Zap, Calendar, Search, Filter, ShieldCheck,
+  User, Clock, ChevronRight, X
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Request States
-  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [filter, setFilter] = useState('All'); // 'All', 'Completed', 'In Progress', 'Planning'
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedManager, setSelectedManager] = useState(null);
-  const [requestData, setRequestData] = useState({ type: 'Deadline Extension', value: '' });
-
-  const handleSendRequest = async (e) => {
-    e.preventDefault();
-    try {
-      const details = {};
-      if (requestData.type === 'Deadline Extension') details.new_deadline = requestData.value;
-      if (requestData.type === 'Status Update') details.new_status = requestData.value;
-
-      await api.post('/requests', {
-        manager_id: selectedManager.id,
-        project_id: selectedProject.id,
-        request_type: requestData.type,
-        details
-      });
-      
-      setShowRequestModal(false);
-      setRequestData({ type: 'Deadline Extension', value: '' });
-      alert('Modification request sent to manager for approval.');
-    } catch (error) {
-      console.error(error);
-      alert('Failed to send request');
-    }
-  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAdminData = async () => {
       try {
-        const [statsRes, projRes, usersRes] = await Promise.all([
-          api.get('/admin/stats'),
-          api.get('/projects'),
-          api.get('/admin/users')
-        ]);
-        setStats(statsRes.data);
-        setProjects(projRes.data);
-        setUsers(usersRes.data);
+        const { data } = await api.get('/projects');
+        setProjects(data);
       } catch (error) {
-        console.error(error);
+        console.error('Failed to fetch admin projects', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchAdminData();
   }, []);
 
   if (loading) return (
@@ -73,283 +38,303 @@ const AdminDashboard = () => {
     </div>
   );
 
-  // Group real projects by manager directly from synchronized database
-  const groupedManagers = users
-    .filter(u => u.role === 'Manager')
-    .map(manager => {
-      const managerProjects = projects.filter(p => p.owner_id === manager.id);
-      
-      const displayProjects = managerProjects.map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || 'Strategic initiative.',
-        members: Array.isArray(p.team_members) ? p.team_members.map(tm => tm.full_name) : []
-      }));
+  // Filter projects based on selected status tab and search query
+  const filteredProjects = projects.filter(p => {
+    const matchesTab = filter === 'All' || p.status === filter;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesTab && matchesSearch;
+  });
 
-      return {
-        ...manager,
-        projects: displayProjects
-      };
-    })
-    .filter(m => m.projects.length > 0);
+  // Calculate overview counts
+  const completedCount = projects.filter(p => p.status === 'Completed').length;
+  const inProgressCount = projects.filter(p => p.status === 'In Progress').length;
+  const planningCount = projects.filter(p => p.status === 'Planning').length;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-20 px-4 space-y-12">
       
-      {/* Premium Admin Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 bg-black rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl shadow-gray-200">
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 border border-white/5">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Root Administrator
+      {/* Premium Executive Header */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
+        <div className="relative z-10 space-y-6 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 border border-white/10">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Executive Oversight Command
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-5xl font-black tracking-tighter text-white">Global Projects Roster</h2>
+            <p className="text-gray-300 text-lg font-medium leading-relaxed">
+              Welcome, Administrator. You have full read-only oversight across all <span className="text-white font-bold">{projects.length} strategic initiatives</span> and active team member allocations.
+            </p>
+          </div>
+          
+          {/* Quick Metrics Pill */}
+          <div className="flex flex-wrap gap-4 pt-2">
+            <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-indigo-400 animate-pulse"></div>
+              <span className="text-sm font-bold text-gray-200">{inProgressCount} In Progress</span>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-5xl font-black tracking-tighter text-white">Global Command</h2>
-              <p className="text-gray-400 text-xl font-medium max-w-lg leading-relaxed">
-                Platform is synchronized. Monitoring <span className="text-white">{groupedManagers.length} Managers</span> and <span className="text-white">{groupedManagers.reduce((acc, m) => acc + m.projects.length, 0)} total projects</span> across the organization.
-              </p>
+            <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+              <span className="text-sm font-bold text-gray-200">{completedCount} Completed</span>
             </div>
-            <div className="flex gap-4 pt-4">
-              <button className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-500/20 hover:scale-105 transition-all flex items-center gap-2">
-                <ClipboardList className="w-4 h-4" /> Export System Audit
-              </button>
-              <button className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-sm hover:bg-white/10 transition-all flex items-center gap-2">
-                 Platform Settings <Zap className="w-4 h-4 text-amber-400" />
-              </button>
+            <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+              <span className="text-sm font-bold text-gray-200">{planningCount} Planning</span>
             </div>
           </div>
-          <Target className="absolute right-[-20px] bottom-[-20px] w-80 h-80 text-white/[0.03] -rotate-12" />
         </div>
-
-        <div className="lg:col-span-4 grid grid-cols-1 gap-6">
-           <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
-              <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
-                 <Activity className="w-6 h-6" />
-              </div>
-              <div>
-                 <p className="text-4xl font-black text-gray-900 tracking-tighter">99.9%</p>
-                 <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">System Health</p>
-              </div>
-           </div>
-           <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
-                 <Users className="w-6 h-6" />
-              </div>
-              <div>
-                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{stats?.totalUsers || users.length || 5}</p>
-                 <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Global Workforce</p>
-              </div>
-           </div>
-        </div>
+        {/* Abstract Background Accents */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2"></div>
+        <Layers className="absolute right-[-20px] bottom-[-20px] w-80 h-80 text-white/[0.03] -rotate-12" />
       </div>
 
-      {/* Grouped Manager View */}
-      <div className="space-y-12">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">Managerial Oversight</h3>
-            <p className="text-sm text-gray-400 font-medium">Tracking cross-managerial project distribution and team velocity.</p>
-          </div>
-          <div className="flex gap-2">
-             <button className="p-4 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-indigo-600 transition-all">
-                <Search className="w-5 h-5" />
-             </button>
-             <button className="p-4 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-indigo-600 transition-all">
-                <Filter className="w-5 h-5" />
-             </button>
-          </div>
-        </div>
-
-        <div className="space-y-10">
-          {groupedManagers.map((manager, mIdx) => (
-            <motion.div
-              key={manager.email}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: mIdx * 0.1 }}
-              className="bg-white border-2 border-blue-600 rounded-3xl p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-10 relative overflow-hidden"
+      {/* Interactive Controls & Status Tabs */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { label: 'All', count: projects.length, color: 'bg-indigo-50 text-indigo-600 border-indigo-100' },
+            { label: 'In Progress', count: inProgressCount, color: 'bg-blue-50 text-blue-600 border-blue-100' },
+            { label: 'Completed', count: completedCount, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+            { label: 'Planning', count: planningCount, color: 'bg-amber-50 text-amber-600 border-amber-100' }
+          ].map(tab => (
+            <button
+              key={tab.label}
+              onClick={() => setFilter(tab.label)}
+              className={clsx(
+                "px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 border cursor-pointer",
+                filter === tab.label 
+                  ? tab.color + ' shadow-md scale-105 ring-2 ring-indigo-500/20' 
+                  : 'bg-gray-50/50 text-gray-500 border-gray-100 hover:bg-gray-50'
+              )}
             >
-              {/* Left Highlight Bar */}
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                   <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                      <Users className="w-5 h-5" />
-                   </div>
-                   <div>
-                      <h4 className="text-2xl font-bold text-gray-900 tracking-tight">{manager.full_name || manager.name}</h4>
-                      <p className="text-sm font-medium text-gray-400">{manager.email}</p>
-                   </div>
-                </div>
-                <div className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold tracking-tight">
-                  {manager.projects.length} Projects
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {manager.projects.map((proj) => (
-                  <motion.div
-                    key={proj.id}
-                    className="bg-gray-50/30 border border-gray-100 rounded-2xl p-6 space-y-6 hover:shadow-lg transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-3">
-                          <Briefcase className="w-4 h-4 text-gray-400" />
-                          <h5 className="text-lg font-bold text-gray-900 tracking-tight">{proj.name}</h5>
-                       </div>
-                       <button 
-                         onClick={() => {
-                           setSelectedProject(proj);
-                           setSelectedManager(manager);
-                           setShowRequestModal(true);
-                         }}
-                         className="p-2 bg-white text-gray-400 hover:text-indigo-600 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-100"
-                         title="Request Modification"
-                       >
-                          <Edit3 className="w-4 h-4" />
-                       </button>
-                    </div>
-                    <p className="text-gray-400 text-xs font-medium leading-relaxed">
-                       {proj.description}
-                    </p>
-                    
-                    <div className="space-y-3">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Team Members ({proj.members?.length || 0})</p>
-                       <div className="space-y-2">
-                          {(proj.members || []).map((member, i) => (
-                            <div key={i} className="bg-white px-4 py-2.5 rounded-lg border border-gray-100/80 flex items-center gap-3 shadow-sm">
-                               <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                               <span className="text-xs font-bold text-gray-700">{member}</span>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+              {tab.label}
+              <span className="px-2 py-0.5 rounded-lg bg-white/80 text-xs font-black shadow-xs">
+                {tab.count}
+              </span>
+            </button>
           ))}
         </div>
 
-        {/* Modification Request Modal */}
-        <AnimatePresence>
-          {showRequestModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowRequestModal(false)}
-                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-10 space-y-8"
-              >
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-gray-900">Request Modification</h3>
-                  <p className="text-gray-400 text-sm font-medium">Proposed changes will be sent to <span className="text-gray-900 font-bold">{selectedManager?.full_name || selectedManager?.name}</span> for approval.</p>
+        {/* Search Input */}
+        <div className="relative min-w-[300px]">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search projects by name or objective..."
+            className="w-full bg-gray-50/80 border border-gray-100 rounded-2xl pl-12 pr-6 py-3.5 text-sm font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {filteredProjects.length === 0 ? (
+          <div className="col-span-full py-20 text-center space-y-4 bg-white rounded-[3rem] border border-gray-100 shadow-sm">
+             <Briefcase className="w-12 h-12 text-gray-300 mx-auto" />
+             <h3 className="text-xl font-bold text-gray-700">No Projects Found</h3>
+             <p className="text-sm text-gray-400 max-w-sm mx-auto">No initiatives match your current filter or search criteria. Try selecting a different tab.</p>
+          </div>
+        ) : (
+          filteredProjects.map((project, idx) => (
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              onClick={() => setSelectedProject(project)}
+              className="group bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all flex flex-col justify-between cursor-pointer relative overflow-hidden"
+            >
+              {/* Top Accent Bar */}
+              <div className={clsx(
+                "absolute top-0 left-0 right-0 h-1.5 transition-all group-hover:h-2",
+                project.status === 'Completed' ? 'bg-emerald-500' :
+                project.status === 'In Progress' ? 'bg-indigo-600' : 'bg-amber-500'
+              )}></div>
+
+              <div className="space-y-6 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-gray-50 text-gray-700 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                     <Briefcase className="w-5 h-5" />
+                  </div>
+                  <span className={clsx(
+                    "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-2xs",
+                    project.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                    project.status === 'In Progress' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                    'bg-amber-50 text-amber-600 border-amber-100'
+                  )}>
+                    {project.status || 'Active'}
+                  </span>
                 </div>
-                
-                <form className="space-y-6" onSubmit={handleSendRequest}>
-                   <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Request Type</label>
-                      <select 
-                        value={requestData.type}
-                        onChange={(e) => setRequestData({ ...requestData, type: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-50 transition-all outline-none"
-                      >
-                         <option>Deadline Extension</option>
-                         <option>Status Update</option>
-                         <option>Priority Change</option>
-                      </select>
+
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{project.name}</h3>
+                  <p className="text-gray-400 text-xs font-medium leading-relaxed line-clamp-2">{project.description}</p>
+                </div>
+
+                {/* Team Members Summary Pill */}
+                <div className="flex items-center gap-2 p-3 bg-gray-50/80 rounded-2xl border border-gray-100/80">
+                   <Users className="w-4 h-4 text-indigo-500 shrink-0" />
+                   <div className="flex-1 min-w-0">
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Force</p>
+                     <p className="text-xs font-bold text-gray-700 truncate">
+                       {Array.isArray(project.team_members) && project.team_members.length > 0 
+                         ? project.team_members.map(tm => tm.full_name || tm.email.split('@')[0]).join(', ') 
+                         : 'No team members assigned'}
+                     </p>
                    </div>
-
-                   {requestData.type === 'Deadline Extension' && (
-                     <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">New Deadline</label>
-                        <input 
-                          type="date"
-                          required
-                          value={requestData.value}
-                          onChange={(e) => setRequestData({ ...requestData, value: e.target.value })}
-                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                        />
-                     </div>
-                   )}
-
-                   {requestData.type === 'Status Update' && (
-                     <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">New Status</label>
-                        <select 
-                          required
-                          value={requestData.value}
-                          onChange={(e) => setRequestData({ ...requestData, value: e.target.value })}
-                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                        >
-                           <option value="">Select Status</option>
-                           <option>Planning</option>
-                           <option>In Progress</option>
-                           <option>Completed</option>
-                        </select>
-                     </div>
-                   )}
-
-                   <div className="flex gap-4 pt-4">
-                      <button 
-                        type="button"
-                        onClick={() => setShowRequestModal(false)}
-                        className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        type="submit"
-                        className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
-                      >
-                        Send Request
-                      </button>
-                   </div>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Platform Activity Monitor */}
-      <div className="bg-white border border-gray-100 rounded-[3rem] p-12 shadow-sm space-y-10">
-         <div className="flex items-center justify-between">
-            <div className="space-y-1">
-               <h3 className="text-2xl font-black text-gray-900 tracking-tight">Platform Audit Log</h3>
-               <p className="text-sm text-gray-400 font-medium">Monitoring sensitive actions and deployments across the cluster.</p>
-            </div>
-            <Activity className="w-6 h-6 text-indigo-200" />
-         </div>
-         
-         <div className="space-y-4">
-            {[
-              { type: 'DEPL', text: 'New build deployed for "Horizon AI Integration" by System Admin', time: '12m ago', color: 'bg-blue-500' },
-              { type: 'AUTH', text: 'Security override successful on cluster-04', time: '45m ago', color: 'bg-purple-500' },
-              { type: 'PROJ', text: 'Project "Genesis Project" archive requested by Manager', time: '2h ago', color: 'bg-amber-500' },
-              { type: 'SYS', text: 'Daily database integrity check completed successfully', time: '4h ago', color: 'bg-emerald-500' }
-            ].map((log, i) => (
-              <div key={i} className="flex items-center gap-6 p-4 hover:bg-gray-50 rounded-2xl transition-colors cursor-default border border-transparent hover:border-gray-100">
-                 <span className={clsx("w-12 text-[9px] font-black text-white px-2 py-1 rounded-md text-center shrink-0", log.color)}>
-                    {log.type}
-                 </span>
-                 <p className="text-sm font-bold text-gray-700 flex-1">{log.text}</p>
-                 <span className="text-[10px] font-black text-gray-300 uppercase">{log.time}</span>
+                   <span className="px-2 py-1 bg-white text-indigo-600 rounded-xl text-xs font-black shadow-2xs border border-gray-100">
+                     {Array.isArray(project.team_members) ? project.team_members.length : 0}
+                   </span>
+                </div>
               </div>
-            ))}
-         </div>
+
+              <div className="pt-6 mt-6 border-t border-gray-50 flex justify-between items-center">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  Due {new Date(project.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+                <div className="flex items-center gap-1 text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
+                   Inspect <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
+
+      {/* Comprehensive Project Details & Team Roster Modal */}
+      <AnimatePresence>
+        {selectedProject && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProject(null)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar border border-gray-100"
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between pb-6 border-b border-gray-100">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className={clsx(
+                      "px-3 py-1 rounded-xl text-xs font-black uppercase tracking-widest border shadow-2xs",
+                      selectedProject.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                      selectedProject.status === 'In Progress' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                      'bg-amber-50 text-amber-600 border-amber-100'
+                    )}>
+                      {selectedProject.status || 'Active'}
+                    </span>
+                    <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> Created {new Date(selectedProject.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="text-3xl font-black text-gray-900 tracking-tight">{selectedProject.name}</h3>
+                </div>
+                <button 
+                  onClick={() => setSelectedProject(null)}
+                  className="p-3 bg-gray-50 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-2xl transition-all cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Project Objective */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Project Objective & Scope</h4>
+                <div className="p-6 bg-gray-50/80 rounded-3xl border border-gray-100 leading-relaxed text-sm font-medium text-gray-700">
+                  {selectedProject.description || 'No objective specified.'}
+                </div>
+              </div>
+
+              {/* Project Metadata Bento */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100/80 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white text-indigo-600 rounded-2xl flex items-center justify-center font-bold shadow-sm">
+                     <Calendar className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Target Deadline</p>
+                    <p className="text-sm font-bold text-gray-800">
+                      {new Date(selectedProject.deadline).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 bg-purple-50/50 rounded-3xl border border-purple-100/80 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white text-purple-600 rounded-2xl flex items-center justify-center font-bold shadow-sm">
+                     <Zap className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-purple-900 uppercase tracking-widest">Team Size</p>
+                    <p className="text-sm font-bold text-gray-800">
+                      {Array.isArray(selectedProject.team_members) ? selectedProject.team_members.length : 0} Active Allocations
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comprehensive Team Roster */}
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assigned Team Roster</h4>
+                  <span className="text-xs font-bold text-gray-400">Read-Only Oversight</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto pr-2">
+                  {Array.isArray(selectedProject.team_members) && selectedProject.team_members.length > 0 ? (
+                    selectedProject.team_members.map((tm, i) => (
+                      <div key={tm.id || i} className="p-4 bg-white rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-4 hover:border-indigo-200 transition-colors">
+                        <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center font-black text-sm shadow-md">
+                          {tm.full_name ? tm.full_name.charAt(0) : tm.email.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-bold text-gray-900 truncate">{tm.full_name || tm.email.split('@')[0]}</p>
+                            <span className={clsx(
+                              "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 border",
+                              tm.role === 'Manager' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                            )}>
+                              {tm.role}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">{tm.email}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full p-8 bg-gray-50 rounded-3xl text-center border border-gray-100">
+                      <p className="text-sm text-gray-400 italic font-medium">No team members currently assigned to this project.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="pt-6 border-t border-gray-100 flex justify-end">
+                <button 
+                  type="button"
+                  onClick={() => setSelectedProject(null)}
+                  className="px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl text-sm font-bold shadow-xl shadow-slate-900/10 transition-all active:scale-95 cursor-pointer"
+                >
+                  Close Oversight View
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
