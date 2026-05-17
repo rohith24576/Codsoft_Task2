@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, CheckSquare, Briefcase, LogOut, Users, ChevronDown, Bell, Settings, PieChart } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Briefcase, LogOut, Users, ChevronDown, Bell, Settings, PieChart, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import NotificationCenter from '../components/NotificationCenter';
 
@@ -42,8 +42,8 @@ const MainLayout = () => {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link to={user?.role === 'Admin' ? '/admin' : '/'} className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-indigo-100">
-                <div className="w-4 h-4 bg-white rounded-sm" />
+              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-md shadow-amber-500/20 text-slate-950">
+                <Layers className="w-4 h-4 font-black" />
               </div>
               <span className="text-xl font-bold tracking-tight text-gray-900">
                 ProjectFlow
@@ -58,9 +58,9 @@ const MainLayout = () => {
                     key={item.name}
                     to={item.path}
                     className={clsx(
-                      "px-4 py-2 text-sm font-bold transition-all rounded-lg",
+                      "px-4 py-2 text-sm font-bold transition-all rounded-full",
                       isActive 
-                        ? "text-indigo-600 bg-indigo-50/50" 
+                        ? "text-amber-600 bg-amber-50/80 border border-amber-200/50 shadow-2xs" 
                         : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                     )}
                   >
@@ -80,9 +80,9 @@ const MainLayout = () => {
             <div className="relative">
               <button 
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center gap-3 p-1.5 rounded-2xl hover:bg-gray-50 transition-all focus:outline-none cursor-pointer border border-transparent hover:border-gray-100"
+                className="flex items-center gap-3 p-1.5 rounded-full hover:bg-gray-50 transition-all focus:outline-none cursor-pointer border border-transparent hover:border-gray-100"
               >
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xs font-bold shadow-sm">
                   {user?.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
@@ -102,11 +102,11 @@ const MainLayout = () => {
                       className="absolute right-0 mt-3 w-80 bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-6 overflow-hidden z-50 space-y-6"
                     >
                       {/* Gradient Header Banner */}
-                      <div className="h-24 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl relative mb-8 shadow-inner">
-                        <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-2xl bg-white p-1.5 shadow-xl flex items-center justify-center text-2xl font-black text-indigo-600 border border-gray-100">
+                      <div className="h-24 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 rounded-2xl relative mb-8 shadow-inner border border-amber-500/20">
+                        <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-full bg-slate-800 p-1.5 shadow-xl flex items-center justify-center text-2xl font-black text-amber-400 border border-amber-500/30">
                           {user?.full_name?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="absolute bottom-3 right-4 px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-sm">
+                        <span className="absolute bottom-3 right-4 px-3 py-1 bg-amber-500 text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
                           {user?.role}
                         </span>
                       </div>
@@ -131,7 +131,7 @@ const MainLayout = () => {
                         </div>
                         <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100/60">
                            <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Access Tier</span>
-                           <span className="font-bold text-indigo-600">
+                           <span className="font-black text-amber-600">
                               {user?.role === 'Admin' ? 'Executive Oversight' : user?.role === 'Manager' ? 'Portfolio Management' : 'General Access'}
                            </span>
                         </div>
