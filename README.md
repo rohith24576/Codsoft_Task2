@@ -1,54 +1,97 @@
 # 🚀 ProjectFlow | Premium Enterprise SaaS
 
-ProjectFlow is a state-of-the-art, high-fidelity project management and administrative oversight platform engineered for modern enterprise teams. Featuring an elite VIP Gold & Charcoal aesthetic, ProjectFlow seamlessly bridges the gap between high-level executive oversight, portfolio management, and granular team execution through a sophisticated dual-governance workflow.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Portal-f59e0b?style=for-the-badge&logo=vercel&logoColor=white)](https://project-flow-ochre.vercel.app/)
+[![CodSoft](https://img.shields.io/badge/CodSoft-Task_2:_Project_Management-1e293b?style=for-the-badge)](https://project-flow-ochre.vercel.app/)
+
+**ProjectFlow** is a modern, high-fidelity project management and administrative oversight platform built for enterprise engineering teams. It provides a beautiful, seamless workspace that connects top-level executives, portfolio managers, and executing team members through a secure, dual-governance workflow.
+
+> 🌟 **Live Production Portal**: Explore the fully functional platform live at [https://project-flow-ochre.vercel.app/](https://project-flow-ochre.vercel.app/)
+> 🏆 **Credits**: Proudly developed as part of the **CodSoft Internship — Task 2 (Project Management Tool)**.
 
 ---
 
 ## 💎 Premium UI & Brand Identity
 
-ProjectFlow features an elite brand identity tailored for executive command centers:
-- **VIP Gold & Charcoal Aesthetic**: A luxurious, high-contrast palette combining rich gold gradients (`#f59e0b` / `#fbbf24`) with soft, sophisticated charcoal slate (`#1e293b`).
+ProjectFlow is designed from the ground up to feel like an elite executive command center:
+- **VIP Gold & Charcoal Aesthetic**: A luxurious, high-contrast visual palette pairing rich gold accents (`#f59e0b` / `#fbbf24`) with elegant charcoal slate (`#1e293b`).
 - **Concentric Architectural Branding**: Powered by the clean, professional `Layers` icon symbolizing multi-tier enterprise architecture and structured project flow across the navigation bar and browser tab favicon.
-- **Glassmorphic Bento Grids**: Modern, asymmetric UI layouts offering instant visual hierarchy for executive metrics, system activity, and user profiles.
+- **Glassmorphic Bento Grids**: Modern, asymmetric UI layouts offering instant visual hierarchy for executive metrics, system activity streams, and user profiles.
 
 ---
 
-## ✨ Key Features & Architectural Innovations
+## ✨ Key Features & How It Works (In Plain English)
 
 ### 1. Role-Based Command Centers
-Dedicated, high-fidelity portals tailored to specific organizational tiers:
-- **Executive Oversight (Admin)**: Focused on macro-level project monitoring, administrative directives, and organizational health.
-- **Portfolio Management (Manager)**: Focused on project creation, team assignment, task generation, and proposal governance.
-- **General Access (Member)**: Focused on deliverable execution, real-time Kanban updates, and progress logging.
+Every user gets a tailored experience based on their specific job in the organization:
+- **Executive Oversight (Admin)**: A high-level command center where executives can monitor all company projects, check system health, and issue top-down directives.
+- **Portfolio Management (Manager)**: A management dashboard where project leads can create new projects, assign team members, create deliverables, and review pending administrative requests.
+- **General Access (Member)**: A clean, focused workspace where team members see their assigned deliverables, update progress, and interact with the Kanban board.
 
-### 2. Admin Directive Dispatch System
-Admins can directly communicate top-down priority shifts, scope changes, or urgent instructions to specific team members or entire project teams. Directives are instantly pushed to the user's real-time **Notification Center**.
+### 2. Direct Admin Directive System
+Admins don't have to rely on external chat apps. If priorities change, an Admin can dispatch a real-time **Admin Directive** directly from the project dashboard to specific team members or the entire project team. These urgent messages appear instantly in the user's **Notification Center**.
 
-### 3. Admin-Manager Dual-Governance Workflow
-To ensure data integrity and prevent unilateral disruption, ProjectFlow implements a two-tier approval mechanism:
-- Admins propose critical project modifications (Deadline extensions, Priority escalations, Status overrides).
-- Managers review pending proposals in their dashboard and must explicitly **Approve** or **Reject** the changes before the backend state synchronizes.
+### 3. The Admin-Manager Dual-Governance Workflow
+To keep project data safe and prevent unexpected changes, ProjectFlow uses a two-step approval system:
+- **Step 1 (Propose)**: An Admin requests a critical change (like extending a deadline, changing project status, or escalating priority).
+- **Step 2 (Review & Approve)**: The assigned Manager sees the pending proposal in their dashboard and must explicitly click **Approve** or **Reject**. The database only updates after the Manager approves, keeping everyone perfectly aligned.
 
-### 4. High-Fidelity Kanban Board & Task Sync
-- Fully interactive, drag-and-drop Kanban board categorized by `Pending`, `In Progress`, and `Completed`.
-- Real-time client-side synchronization ensuring that task completion instantly reflects in the global **System Activity** tracker and project completion percentages.
+### 4. Interactive Drag-and-Drop Kanban Board
+- Team members and managers can easily drag tasks between `Pending`, `In Progress`, and `Completed` columns.
+- Moving a task instantly updates the project's overall completion percentage and logs a real-time event in the global **System Activity** feed.
 
-### 5. Live System Activity Engine
-Replaces static mock logs with a fully dynamic activity stream computed in real-time from active project initializations, task status updates, and administrative overrides.
+### 5. Live System Activity Stream
+Say goodbye to fake mock data. The System Activity section dynamically generates live feed updates whenever a project is created, a task is completed, or an administrative override is approved.
+
+---
+
+## 📂 Complete Folder Structure
+
+Here is how the entire full-stack project is organized:
+
+```text
+ProjectFlow/
+├── backend/                        # Node.js & Express API Server
+│   ├── src/
+│   │   ├── config/                 # Database configuration (db.js connecting to Supabase)
+│   │   ├── controllers/            # Business logic (auth, project, task, admin, notification)
+│   │   ├── middleware/             # JWT Authentication & Role verification middleware
+│   │   └── routes/                 # Express API endpoints
+│   ├── .env                        # Backend environment variables (PORT, DATABASE_URL, JWT_SECRET)
+│   ├── package.json                # Backend dependencies
+│   └── server.js                   # Main application entry point
+│
+├── frontend/                       # React.js & Tailwind CSS Client
+│   ├── public/                     # Static assets (including custom favicon.svg)
+│   ├── src/
+│   │   ├── components/             # Reusable UI widgets (KanbanBoard, NotificationCenter, Navbar, Modals)
+│   │   ├── context/                # Global React Context (AuthContext.jsx for session state)
+│   │   ├── layouts/                # Page wrappers (MainLayout.jsx with VIP Gold & Charcoal navbar)
+│   │   ├── pages/                  # Main views (Login, Register, Dashboard, AdminDashboard, Projects, Tasks)
+│   │   ├── App.jsx                 # Root React component & Router configuration
+│   │   ├── index.css               # Vanilla CSS utilities & Tailwind directives
+│   │   └── main.jsx                # DOM rendering entry point
+│   ├── .env                        # Frontend environment variables (VITE_API_URL)
+│   ├── package.json                # Frontend dependencies
+│   └── vite.config.js              # Vite bundler configuration
+│
+├── database.sql                    # Complete Supabase PostgreSQL Schema & Seed Data
+└── README.md                       # Project documentation
+```
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React.js, Tailwind CSS (Vanilla Utility CSS), Framer Motion (Smooth Micro-Animations & Page Transitions), Lucide React (Premium Vector Icons).
-- **Backend**: Node.js, Express.js, RESTful API Architecture, JWT (JSON Web Tokens) Authentication, Bcryptjs (Password Hashing).
-- **Database**: PostgreSQL (Hosted on Supabase) with robust relational constraints and cascading deletions.
+- **Frontend**: React.js, Tailwind CSS, Framer Motion (Smooth Micro-Animations & Page Transitions), Lucide React (Premium Vector Icons).
+- **Backend**: Node.js, Express.js, RESTful API Architecture, JSON Web Tokens (JWT) for secure authentication, Bcryptjs for password hashing.
+- **Database**: PostgreSQL (Hosted on Supabase) featuring robust relational constraints, foreign key mappings, and cascading deletions.
+- **Deployment**: Vercel (Frontend Client) & Render/Supabase (Backend & Database).
 
 ---
 
 ## 📦 Pre-Configured Demo Accounts
 
-For seamless evaluation, ProjectFlow includes 5 pre-configured demo accounts. You can select any of these accounts directly from the Login page or enter their credentials manually:
+Want to test the platform immediately? We have set up 5 pre-configured demo accounts. You can click any of them on the Login page for instant one-click access, or log in manually using the table below:
 
 | Full Name | Role | Email Address | Default Password | Access Tier |
 | :--- | :--- | :--- | :--- | :--- |
@@ -63,89 +106,95 @@ For seamless evaluation, ProjectFlow includes 5 pre-configured demo accounts. Yo
 ## 📡 API Reference
 
 ### Authentication (`/api/auth`)
-- `POST /api/auth/register` - Register a new user account
-- `POST /api/auth/login` - Authenticate user and receive JWT & profile payload
-- `GET /api/auth/me` - Retrieve current authenticated user profile
-- `POST /api/auth/logout` - Invalidate session
+- `POST /api/auth/register` - Create a new user account
+- `POST /api/auth/login` - Verify credentials and return JWT session token
+- `GET /api/auth/me` - Get profile details of the currently logged-in user
+- `POST /api/auth/logout` - End current user session
 
 ### Projects (`/api/projects`)
-- `GET /api/projects` - Retrieve all projects (filtered dynamically by user role)
-- `POST /api/projects` - Initialize a new project enterprise (Admin/Manager)
-- `DELETE /api/projects/:id` - Decommission a project
+- `GET /api/projects` - Get all projects (automatically filtered by the user's role)
+- `POST /api/projects` - Create a new project (Restricted to Admins & Managers)
+- `DELETE /api/projects/:id` - Delete a project from the system
 
 ### Tasks (`/api/tasks`)
-- `GET /api/tasks` - Retrieve all project deliverables
+- `GET /api/tasks` - Get all deliverables across projects
 - `POST /api/tasks` - Create a new task deliverable
-- `PATCH /api/tasks/:id` - Update task status, priority, or assignee
-- `DELETE /api/tasks/:id` - Remove a task deliverable
+- `PATCH /api/tasks/:id` - Update task status (e.g., In Progress -> Completed)
+- `DELETE /api/tasks/:id` - Delete a task deliverable
 
 ### Admin & Workflows (`/api/requests` & `/api/admin`)
-- `GET /api/admin/stats` - Retrieve global platform health metrics
-- `GET /api/admin/users` - List all active organization members
-- `POST /api/requests` - Propose a project override (Admin)
-- `GET /api/requests/manager` - View pending override proposals (Manager)
-- `PATCH /api/requests/:id/handle` - Execute Approval or Rejection of proposal (Manager)
+- `GET /api/admin/stats` - Get company-wide statistics for the executive dashboard
+- `GET /api/admin/users` - List all registered team members in the company
+- `POST /api/requests` - Admin proposes a project override
+- `GET /api/requests/manager` - Manager views all pending override proposals
+- `PATCH /api/requests/:id/handle` - Manager approves or rejects the proposal
 
 ### Notifications (`/api/notifications`)
-- `POST /api/notifications` - Dispatch an Admin Directive or system alert
-- `GET /api/notifications` - Retrieve active alerts for the authenticated user
-- `PATCH /api/notifications/:id/read` - Mark a specific alert as acknowledged
-- `PATCH /api/notifications/read-all` - Dismiss all active notifications
+- `POST /api/notifications` - Send an Admin Directive or system alert
+- `GET /api/notifications` - Get all unread alerts for the current user
+- `PATCH /api/notifications/:id/read` - Mark a specific alert as read
+- `PATCH /api/notifications/read-all` - Clear all notifications from the panel
 
 ---
 
 ## 🔐 Role Permissions Matrix
 
+Here is a simple breakdown of who can do what inside ProjectFlow:
+
 | Capability | Admin | Manager | Member |
 | :--- | :--- | :--- | :--- |
-| **Executive Oversight Portal** | ✅ | ❌ | ❌ |
+| **Access Executive Oversight Portal** | ✅ | ❌ | ❌ |
 | **Dispatch Admin Directives** | ✅ | ❌ | ❌ |
 | **Propose Project Overrides** | ✅ | ❌ | ❌ |
 | **Approve/Reject Overrides** | ❌ | ✅ | ❌ |
 | **Create & Manage Projects** | ✅ | ✅ | ❌ |
 | **Create & Assign Tasks** | ✅ | ✅ | ❌ |
-| **Update Task Progress** | ✅ | ✅ | ✅ |
-| **View System Activity Stream** | ✅ | ✅ | ✅ |
+| **Update Task Progress (Kanban)** | ✅ | ✅ | ✅ |
+| **View Live System Activity Feed** | ✅ | ✅ | ✅ |
 
 ---
 
-## 🛠 Getting Started & Installation Guide
+## 🚀 Getting Started & Local Installation Guide
+
+Follow these simple steps to run ProjectFlow on your local machine:
 
 ### 1. Database Setup (Supabase)
-To ensure your database perfectly synchronizes all 5 demo accounts without conflict, execute the `database.sql` script in your **Supabase SQL Editor**. 
+1. Create a free project on [Supabase](https://supabase.com/).
+2. Open the **SQL Editor** in your Supabase dashboard.
+3. Copy the entire contents of `database.sql` from this repository and run it.
 
 > [!IMPORTANT]
-> The seed script utilizes `ON CONFLICT (id) DO UPDATE` to guarantee that existing rows are updated and missing demo users (like Suresh and Mukesh) are forcefully inserted with correct password hashes.
+> The `database.sql` script uses `ON CONFLICT (id) DO UPDATE` to ensure that all 5 demo accounts (including Suresh and Mukesh) are correctly created with their encrypted `password123` credentials.
 
 ### 2. Environment Configuration
-Create a `.env` file in both the `backend` and `frontend` directories:
+Create a `.env` file inside both the `backend` and `frontend` folders:
 
-**`/backend/.env`**:
+**Inside `/backend/.env`**:
 ```env
 PORT=5000
-DATABASE_URL=your_supabase_postgresql_connection_string
+DATABASE_URL=your_supabase_postgresql_connection_string_here
 JWT_SECRET=your_super_secret_jwt_key_here
 ```
 
-**`/frontend/.env`**:
+**Inside `/frontend/.env`**:
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-### 3. Backend Initialization
-Open a terminal and start the Express server:
+### 3. Start the Backend Server
+Open your terminal, navigate to the backend folder, install dependencies, and start the development server:
 ```bash
 cd backend
 npm install
 npm run dev
 ```
-*The backend will initialize and listen on port 5000.*
+*Your backend API will now be running on `http://localhost:5000`.*
 
-### 4. Frontend Initialization
-Open a second terminal and start the Vite development server:
+### 4. Start the Frontend Client
+Open a second terminal window, navigate to the frontend folder, install dependencies, and start the React client:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Open the local Vite URL (e.g., `http://localhost:5173`) in your browser to experience ProjectFlow.*
+*Click the local URL (e.g., `http://localhost:5173`) in your terminal to open ProjectFlow in your browser!*
