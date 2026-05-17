@@ -118,7 +118,11 @@ INSERT INTO public.users (id, email, full_name, password, role) VALUES
 ('33333333-3333-3333-3333-333333333333', 'suresh@projectflow.io', 'Suresh Sharma', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Manager'),
 ('44444444-4444-4444-4444-444444444444', 'member@projectflow.io', 'Rahul Varma', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Member'),
 ('55555555-5555-5555-5555-555555555555', 'mukesh@projectflow.io', 'Mukesh Singh', '$2b$10$sWLKl0hw4utoQ.TeYVHyfOGigRFD7NhzexRYjR/mbroSJPbbasVoe', 'Member')
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    password = EXCLUDED.password,
+    role = EXCLUDED.role;
 
 -- 11. Seed Projects
 INSERT INTO public.projects (id, name, description, status, deadline, owner_id) VALUES
