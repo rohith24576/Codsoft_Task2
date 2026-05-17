@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,11 @@ import clsx from 'clsx';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  if (user?.role === 'Admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);

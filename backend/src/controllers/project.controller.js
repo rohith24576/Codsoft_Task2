@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 
+
 export const createProject = async (req, res) => {
   const { name, description, deadline } = req.body;
   try {

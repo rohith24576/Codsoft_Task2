@@ -1,11 +1,14 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
-dotenv.config();
+
+const envConfig = dotenv.config({ override: true });
 
 const { Pool } = pg;
 
+const connectionString = envConfig.parsed?.DATABASE_URL || process.env.DATABASE_URL;
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: {
     rejectUnauthorized: false // Required for Supabase and most hosted Postgres
   }

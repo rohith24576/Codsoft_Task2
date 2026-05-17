@@ -41,7 +41,7 @@ const MainLayout = () => {
       <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm shadow-gray-100/20">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-10">
-            <Link to="/" className="flex items-center gap-2.5">
+            <Link to={user?.role === 'Admin' ? '/admin' : '/'} className="flex items-center gap-2.5">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-indigo-100">
                 <div className="w-4 h-4 bg-white rounded-sm" />
               </div>
