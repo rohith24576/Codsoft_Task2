@@ -76,18 +76,18 @@ const MainLayout = () => {
             
             <div className="h-6 w-px bg-gray-100 mx-1" />
 
-            {/* Profile Dropdown */}
+            {/* Profile Dropdown / User Details Popover */}
             <div className="relative">
               <button 
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center gap-3 p-1 rounded-full hover:bg-gray-50 transition-all focus:outline-none"
+                className="flex items-center gap-3 p-1.5 rounded-2xl hover:bg-gray-50 transition-all focus:outline-none cursor-pointer border border-transparent hover:border-gray-100"
               >
-                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
                   {user?.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs font-semibold text-gray-900 leading-tight">{user?.full_name}</p>
-                  <p className="text-[10px] text-gray-500 font-medium leading-tight">{user?.role}</p>
+                  <p className="text-xs font-bold text-gray-900 leading-tight">{user?.full_name}</p>
+                  <p className="text-[10px] text-gray-400 font-bold leading-tight">{user?.role}</p>
                 </div>
                 <ChevronDown className={clsx("w-4 h-4 text-gray-400 transition-transform", showUserDropdown && "rotate-180")} />
               </button>
@@ -99,40 +99,64 @@ const MainLayout = () => {
                       initial={{ opacity: 0, y: 10, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                      className="absolute right-0 mt-3 w-64 bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/40 py-2 overflow-hidden"
+                      className="absolute right-0 mt-3 w-80 bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-6 overflow-hidden z-50 space-y-6"
                     >
-                      <div className="px-5 py-3 border-b border-gray-50 mb-1">
-                        <p className="text-sm font-semibold text-gray-900">{user?.full_name}</p>
-                        <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                      {/* Gradient Header Banner */}
+                      <div className="h-24 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl relative mb-8 shadow-inner">
+                        <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-2xl bg-white p-1.5 shadow-xl flex items-center justify-center text-2xl font-black text-indigo-600 border border-gray-100">
+                          {user?.full_name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="absolute bottom-3 right-4 px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-sm">
+                          {user?.role}
+                        </span>
                       </div>
-                      
-                      <div className="px-2">
+
+                      {/* User Info */}
+                      <div className="space-y-1 px-1">
+                        <h4 className="text-lg font-black text-gray-900 tracking-tight">{user?.full_name}</h4>
+                        <p className="text-xs font-bold text-gray-400">{user?.email}</p>
+                      </div>
+
+                      {/* Bento Details Grid */}
+                      <div className="bg-gray-50/80 rounded-2xl p-4 space-y-3 border border-gray-100/80">
+                        <div className="flex items-center justify-between text-xs">
+                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Status</span>
+                           <span className="flex items-center gap-1.5 text-emerald-600 font-black">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active • Verified
+                           </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100/60">
+                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Organization</span>
+                           <span className="font-bold text-gray-700">ProjectFlow Global</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100/60">
+                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Access Tier</span>
+                           <span className="font-bold text-indigo-600">
+                              {user?.role === 'Admin' ? 'Executive Oversight' : user?.role === 'Manager' ? 'Portfolio Management' : 'General Access'}
+                           </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100/60">
+                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Member Since</span>
+                           <span className="font-bold text-gray-700">Oct 2026</span>
+                        </div>
+                      </div>
+
+                      {/* Switch Account / Logout */}
+                      <div className="pt-2 border-t border-gray-100 px-1">
                         <button 
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-xl transition-all font-bold text-xs group cursor-pointer border border-gray-100/80 hover:border-red-100"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Sign out
+                          <LogOut className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                          Switch Account / Logout
                         </button>
                       </div>
                     </motion.div>
-                    <div className="fixed inset-0 z-[-1]" onClick={() => setShowUserDropdown(false)} />
+                    <div className="fixed inset-0 z-[40]" onClick={() => setShowUserDropdown(false)} />
                   </>
                 )}
               </AnimatePresence>
             </div>
-
-            <div className="h-6 w-px bg-gray-100 mx-1" />
-
-            {/* Sign Out Button */}
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all group"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
           </div>
         </div>
       </header>

@@ -9,6 +9,7 @@ import {
   MoreVertical, UserPlus, Zap, Bell, Calendar
 } from 'lucide-react';
 import clsx from 'clsx';
+import CustomSelect from '../components/CustomSelect';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -23,9 +24,43 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSyncOverlay, setShowSyncOverlay] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [notification, setNotification] = useState(null); // { type: 'success' | 'error' | 'info', message: '' }
   const [projectData, setProjectData] = useState({ name: '', description: '', deadline: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [broadcastData, setBroadcastData] = useState({ title: '', message: '', urgency: 'Standard', target_project: 'All' });
+  const [deadlineData, setDeadlineData] = useState({ project_id: '', milestone: '', new_date: '', rationale: '' });
+  const [syncData, setSyncData] = useState({ title: 'Weekly Sprint Alignment', date: '', time: '10:00', platform: 'Google Meet', agenda: 'Review sprint deliverables, identify blockers, and assign upcoming tasks.' });
+
+  const showNotify = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleScheduleSync = (e) => {
+    e.preventDefault();
+    if (!syncData.date) return showNotify('error', 'Please select a sync date');
+    setShowSyncOverlay(false);
+    showNotify('success', `Team sync scheduled on ${syncData.platform} for ${syncData.date} at ${syncData.time}!`);
+  };
+
+  const handleSendBroadcast = (e) => {
+    e.preventDefault();
+    if (!broadcastData.message) return showNotify('error', 'Please enter a broadcast message');
+    setShowBroadcastModal(false);
+    showNotify('success', `Broadcast announcement sent to ${broadcastData.target_project} team members!`);
+    setBroadcastData({ title: '', message: '', urgency: 'Standard', target_project: 'All' });
+  };
+
+  const handleSetDeadline = (e) => {
+    e.preventDefault();
+    if (!deadlineData.new_date) return showNotify('error', 'Please select a new target deadline date');
+    setShowDeadlineModal(false);
+    showNotify('success', `Project deadline successfully updated to ${deadlineData.new_date}!`);
+    setDeadlineData({ project_id: '', milestone: '', new_date: '', rationale: '' });
+  };
 
   // Live states for demo
   const [requests, setRequests] = useState([
@@ -42,11 +77,6 @@ const Dashboard = () => {
 
   const isManager = user?.role === 'Manager';
   const canManage = user?.role === 'Admin' || isManager;
-
-  const showNotify = (type, message) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 4000);
-  };
 
   const fetchData = async () => {
     try {
@@ -595,17 +625,20 @@ const Dashboard = () => {
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                    <button 
-                     onClick={() => showNotify('info', 'Broadcasting updates to all members...')}
-                     className="p-4 bg-white rounded-2xl shadow-sm border border-indigo-100 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                     onClick={() => setShowBroadcastModal(true)}
+                     className="p-4 bg-white rounded-2xl shadow-sm border border-indigo-100 hover:shadow-md transition-all flex flex-col items-center gap-2 cursor-pointer group"
                    >
-                      <Bell className="w-5 h-5 text-indigo-600" />
+                      <Bell className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-bold text-gray-600">Broadcast</span>
                    </button>
                    <button 
-                     onClick={() => showNotify('info', 'Setting upcoming project deadlines...')}
-                     className="p-4 bg-white rounded-2xl shadow-sm border border-indigo-100 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                     onClick={() => {
+                       if (projects.length > 0) setDeadlineData(prev => ({ ...prev, project_id: projects[0].id }));
+                       setShowDeadlineModal(true);
+                     }}
+                     className="p-4 bg-white rounded-2xl shadow-sm border border-indigo-100 hover:shadow-md transition-all flex flex-col items-center gap-2 cursor-pointer group"
                    >
-                      <Calendar className="w-5 h-5 text-indigo-600" />
+                      <Calendar className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-bold text-gray-600">Deadline</span>
                    </button>
                 </div>
@@ -632,6 +665,497 @@ const Dashboard = () => {
                {notification.type === 'info' && <Bell className="w-5 h-5" />}
                <p className="text-sm font-bold">{notification.message}</p>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Create Project Modal */}
+        <AnimatePresence>
+          {showCreateModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isSubmitting && setShowCreateModal(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Create New Project</h3>
+                  <p className="text-gray-400 text-sm font-medium">Initialize a new project portfolio and establish deliverables.</p>
+                </div>
+                
+                <form className="space-y-6" onSubmit={handleCreateProject}>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Project Name</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={projectData.name}
+                      onChange={(e) => setProjectData({ ...projectData, name: e.target.value })}
+                      placeholder="e.g. ProjectFlow Enterprise"
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Description</label>
+                    <textarea 
+                      rows={3}
+                      value={projectData.description}
+                      onChange={(e) => setProjectData({ ...projectData, description: e.target.value })}
+                      placeholder="Provide high-level goals and scope..."
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none" 
+                    ></textarea>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Target Deadline</label>
+                    <input 
+                      type="date"
+                      value={projectData.deadline}
+                      onChange={(e) => setProjectData({ ...projectData, deadline: e.target.value })}
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-gray-100">
+                     <button 
+                       type="button"
+                       disabled={isSubmitting}
+                       onClick={() => setShowCreateModal(false)}
+                       className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       type="submit"
+                       disabled={isSubmitting}
+                       className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                     >
+                       {isSubmitting ? 'Creating...' : 'Initialize Project'}
+                     </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Manage Team Members Modal */}
+        <AnimatePresence>
+          {showMemberModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isManagingMember && setShowMemberModal(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Manage Team Members</h3>
+                  <p className="text-gray-400 text-sm font-medium">Assign organization members to projects or adjust team roles.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <CustomSelect 
+                      label="Select Project"
+                      value={selectedManageProject}
+                      onChange={setSelectedManageProject}
+                      options={projects.map(p => ({
+                        value: p.id,
+                        label: p.name,
+                        sublabel: p.status
+                      }))}
+                      placeholder="Select a Project"
+                    />
+                  </div>
+
+                  {/* Current Members List */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Current Members</label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {(() => {
+                        const currentProj = projects.find(p => p.id === selectedManageProject);
+                        const members = currentProj?.team_members || [];
+                        if (members.length === 0) return <p className="text-sm text-gray-400 italic p-4 bg-gray-50 rounded-2xl text-center">No team members assigned yet.</p>;
+                        return members.map(tm => (
+                          <div key={tm.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold text-sm">
+                                {tm.full_name ? tm.full_name.charAt(0) : tm.email.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">{tm.full_name || tm.email.split('@')[0]}</p>
+                                <p className="text-[10px] text-gray-400 font-medium">{tm.email} • <span className="font-bold text-indigo-600">{tm.role}</span></p>
+                              </div>
+                            </div>
+                            {tm.email !== user?.email && (
+                              <button 
+                                onClick={() => handleRemoveMember(selectedManageProject, tm.id)}
+                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+                                title="Remove Member"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Add New Member Form */}
+                  <form onSubmit={handleAddMember} className="space-y-4 pt-6 border-t border-gray-100">
+                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assign New Member</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <CustomSelect 
+                          label="Organization User"
+                          value={selectedAddUser}
+                          onChange={setSelectedAddUser}
+                          options={allUsers.map(u => ({
+                            value: u.id,
+                            label: u.full_name || u.email.split('@')[0],
+                            sublabel: u.email,
+                            badge: u.role,
+                            avatar: (u.full_name || u.email).charAt(0)
+                          }))}
+                          placeholder="Select User"
+                        />
+                      </div>
+                      <div>
+                        <CustomSelect 
+                          label="Project Role"
+                          value={selectedAddRole}
+                          onChange={setSelectedAddRole}
+                          options={[
+                            { value: 'Member', label: 'Member', badge: 'Member' },
+                            { value: 'Manager', label: 'Manager', badge: 'Manager' }
+                          ]}
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      type="submit"
+                      disabled={isManagingMember}
+                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <UserPlus className="w-4 h-4" /> {isManagingMember ? 'Assigning...' : 'Assign to Project'}
+                    </button>
+                  </form>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                  <button 
+                    type="button"
+                    onClick={() => setShowMemberModal(false)}
+                    className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Schedule Team Sync Modal */}
+        <AnimatePresence>
+          {showSyncOverlay && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSyncOverlay(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Schedule Team Sync</h3>
+                  <p className="text-gray-400 text-sm font-medium">Coordinate alignment meetings across active project teams.</p>
+                </div>
+
+                <form className="space-y-6" onSubmit={handleScheduleSync}>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Meeting Title</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={syncData.title}
+                      onChange={(e) => setSyncData({ ...syncData, title: e.target.value })}
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Date</label>
+                      <input 
+                        required
+                        type="date" 
+                        value={syncData.date}
+                        onChange={(e) => setSyncData({ ...syncData, date: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Time</label>
+                      <input 
+                        required
+                        type="time" 
+                        value={syncData.time}
+                        onChange={(e) => setSyncData({ ...syncData, time: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <CustomSelect 
+                      label="Platform"
+                      value={syncData.platform}
+                      onChange={(val) => setSyncData({ ...syncData, platform: val })}
+                      options={[
+                        { value: 'Google Meet', label: 'Google Meet', badge: 'Video' },
+                        { value: 'Zoom', label: 'Zoom', badge: 'Video' },
+                        { value: 'Microsoft Teams', label: 'Microsoft Teams', badge: 'Enterprise' },
+                        { value: 'Slack Huddle', label: 'Slack Huddle', badge: 'Audio' }
+                      ]}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Agenda & Goals</label>
+                    <textarea 
+                      rows={3}
+                      value={syncData.agenda}
+                      onChange={(e) => setSyncData({ ...syncData, agenda: e.target.value })}
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none" 
+                    ></textarea>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-gray-100">
+                     <button 
+                       type="button"
+                       onClick={() => setShowSyncOverlay(false)}
+                       className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       type="submit"
+                       className="flex-1 py-4 bg-gray-900 text-white rounded-2xl text-sm font-bold shadow-xl shadow-gray-200 hover:bg-black transition-all active:scale-95 cursor-pointer"
+                     >
+                       Schedule Sync
+                     </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Broadcast Modal */}
+        <AnimatePresence>
+          {showBroadcastModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowBroadcastModal(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Broadcast Announcement</h3>
+                  <p className="text-gray-400 text-sm font-medium">Instantly push critical updates and alerts to team dashboards.</p>
+                </div>
+
+                <form className="space-y-6" onSubmit={handleSendBroadcast}>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Broadcast Title</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={broadcastData.title}
+                      onChange={(e) => setBroadcastData({ ...broadcastData, title: e.target.value })}
+                      placeholder="e.g. Critical Server Maintenance"
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <CustomSelect 
+                        label="Target Group"
+                        value={broadcastData.target_project}
+                        onChange={(val) => setBroadcastData({ ...broadcastData, target_project: val })}
+                        options={[
+                          { value: 'All', label: 'All Projects', badge: 'Global' },
+                          ...projects.map(p => ({ value: p.name, label: p.name, badge: 'Project' }))
+                        ]}
+                      />
+                    </div>
+                    <div>
+                      <CustomSelect 
+                        label="Urgency Level"
+                        value={broadcastData.urgency}
+                        onChange={(val) => setBroadcastData({ ...broadcastData, urgency: val })}
+                        options={[
+                          { value: 'Standard', label: 'Standard', badge: 'Normal' },
+                          { value: 'Urgent', label: 'Urgent', badge: 'High' },
+                          { value: 'Critical', label: 'Critical', badge: 'Immediate' }
+                        ]}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Announcement Message</label>
+                    <textarea 
+                      required
+                      rows={4}
+                      value={broadcastData.message}
+                      onChange={(e) => setBroadcastData({ ...broadcastData, message: e.target.value })}
+                      placeholder="Provide detailed instructions or updates..."
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none" 
+                    ></textarea>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-gray-100">
+                     <button 
+                       type="button"
+                       onClick={() => setShowBroadcastModal(false)}
+                       className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       type="submit"
+                       className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer"
+                     >
+                       Send Broadcast
+                     </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Deadline Modal */}
+        <AnimatePresence>
+          {showDeadlineModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowDeadlineModal(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Adjust Target Deadline</h3>
+                  <p className="text-gray-400 text-sm font-medium">Realign project timelines and submit extension rationales.</p>
+                </div>
+
+                <form className="space-y-6" onSubmit={handleSetDeadline}>
+                  <div>
+                    <CustomSelect 
+                      label="Select Project"
+                      value={deadlineData.project_id}
+                      onChange={(val) => setDeadlineData({ ...deadlineData, project_id: val })}
+                      options={projects.map(p => ({ value: p.id, label: p.name, sublabel: p.status }))}
+                      placeholder="Select a Project"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Milestone / Scope</label>
+                      <input 
+                        required
+                        type="text" 
+                        value={deadlineData.milestone}
+                        onChange={(e) => setDeadlineData({ ...deadlineData, milestone: e.target.value })}
+                        placeholder="e.g. Phase 2 Release"
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">New Deadline</label>
+                      <input 
+                        required
+                        type="date" 
+                        value={deadlineData.new_date}
+                        onChange={(e) => setDeadlineData({ ...deadlineData, new_date: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Extension Rationale</label>
+                    <textarea 
+                      required
+                      rows={3}
+                      value={deadlineData.rationale}
+                      onChange={(e) => setDeadlineData({ ...deadlineData, rationale: e.target.value })}
+                      placeholder="Explain the reason for timeline realignment..."
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none" 
+                    ></textarea>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-gray-100">
+                     <button 
+                       type="button"
+                       onClick={() => setShowDeadlineModal(false)}
+                       className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       type="submit"
+                       className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer"
+                     >
+                       Update Deadline
+                     </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>
