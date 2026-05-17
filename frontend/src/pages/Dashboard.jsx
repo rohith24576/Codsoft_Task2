@@ -539,22 +539,94 @@ const Dashboard = () => {
 
                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
                   <h3 className="text-lg font-bold text-gray-900">System Activity</h3>
-                  <div className="space-y-6 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-px before:bg-gray-100">
-                    {[
-                      { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', text: 'Alex completed "API Integration"', time: '2m ago' },
-                      { icon: Plus, color: 'text-indigo-500', bg: 'bg-indigo-50', text: 'New project "Z-Cloud" created', time: '1h ago' },
-                      { icon: ListTodo, color: 'text-purple-500', bg: 'bg-purple-50', text: '3 tasks assigned to Rohan', time: '5h ago' }
-                    ].map((act, i) => (
-                      <div key={i} className="flex gap-4 relative z-10">
-                        <div className={clsx("w-5 h-5 rounded-full flex items-center justify-center shrink-0 shadow-sm", act.bg)}>
-                          <act.icon className={clsx("w-3 h-3", act.color)} />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs font-bold text-gray-800">{act.text}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">{act.time}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="space-y-6 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-px before:bg-gray-100">
+                    {(() => {
+                      const acts = [];
+                      // Add recent tasks
+                      tasks.forEach(t => {
+                        if (t.status === 'Done') {
+                          acts.push({
+                            id: `task-done-${t.id}`,
+                            icon: CheckCircle2,
+                            color: 'text-emerald-500',
+                            bg: 'bg-emerald-50',
+                            text: `${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'} completed "${t.title}"`,
+                            time: t.updated_at || t.created_at || new Date(),
+                            label: 'Task Completed'
+                          });
+                        } else if (t.status === 'In Progress') {
+                          acts.push({
+                            id: `task-prog-${t.id}`,
+                            icon: ListTodo,
+                            color: 'text-purple-500',
+                            bg: 'bg-purple-50',
+                            text: `"${t.title}" is now In Progress by ${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'}`,
+                            time: t.updated_at || t.created_at || new Date(),
+                            label: 'Task Active'
+                          });
+                        } else {
+                          acts.push({
+                            id: `task-new-${t.id}`,
+                            icon: Plus,
+                            color: 'text-indigo-500',
+                            bg: 'bg-indigo-50',
+                            text: `New task "${t.title}" assigned to ${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'}`,
+                            time: t.created_at || new Date(),
+                            label: 'Task Created'
+                          });
+                        }
+                      });
+                      // Add recent projects
+                      projects.forEach(p => {
+                        acts.push({
+                          id: `proj-${p.id}`,
+                          icon: Plus,
+                          color: 'text-blue-500',
+                          bg: 'bg-blue-50',
+                          text: `New project portfolio "${p.name}" initialized`,
+                          time: p.created_at || new Date(),
+                          label: 'Project Created'
+                        });
+                      });
+
+                      // Sort by time descending
+                      acts.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                      if (acts.length === 0) {
+                        return (
+                          <div className="p-8 text-center text-gray-400">
+                            <Activity className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                            <p className="text-xs font-medium">No recent system activity</p>
+                          </div>
+                        );
+                      }
+
+                      return acts.slice(0, 5).map((act) => {
+                        const diffMs = new Date() - new Date(act.time);
+                        const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+                        const diffHours = Math.floor(diffMins / 60);
+                        const diffDays = Math.floor(diffHours / 24);
+                        let timeStr = 'Just now';
+                        if (diffDays > 0) timeStr = `${diffDays}d ago`;
+                        else if (diffHours > 0) timeStr = `${diffHours}h ago`;
+                        else if (diffMins > 0) timeStr = `${diffMins}m ago`;
+
+                        return (
+                          <div key={act.id} className="flex gap-4 relative z-10 items-start group">
+                            <div className={clsx("w-6 h-6 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110 mt-0.5", act.bg)}>
+                              <act.icon className={clsx("w-3.5 h-3.5", act.color)} />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <p className="text-xs font-bold text-gray-900 leading-snug group-hover:text-indigo-600 transition-colors">{act.text}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-gray-400 font-bold">{timeStr}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-gray-500 font-semibold">{act.label}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                </div>
             </div>
