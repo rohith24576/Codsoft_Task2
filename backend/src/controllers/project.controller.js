@@ -111,3 +111,36 @@ export const deleteProject = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const getAllOrgUsers = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, full_name, email, role, avatar_url FROM users ORDER BY full_name');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addTeamMember = async (req, res) => {
+  const { project_id, user_id, role } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO team_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT (project_id, user_id) DO UPDATE SET role = $3 RETURNING *',
+      [project_id, user_id, role || 'Member']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const removeTeamMember = async (req, res) => {
+  const { projectId, userId } = req.params;
+  try {
+    await pool.query('DELETE FROM team_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+    res.json({ message: 'Team member removed successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+

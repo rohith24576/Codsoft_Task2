@@ -27,13 +27,13 @@ const Dashboard = () => {
     { id: 1, name: 'Arjun Mehra', email: 'arjun@projectflow.io', role: 'UI Designer' },
     { id: 2, name: 'Sanya Malhotra', email: 'sanya@projectflow.io', role: 'React Developer' }
   ]);
-  const [teamMembers, setTeamMembers] = useState([
-    { name: 'Vikram Sethi', email: 'vikram@projectflow.io', role: 'Backend Lead', status: 'In Meeting', color: 'bg-amber-500', projects: ['Horizon AI'] },
-    { name: 'Ishita Sharma', email: 'ishita@projectflow.io', role: 'Frontend Architect', status: 'Online', color: 'bg-emerald-500', projects: ['Stealth Mode'] },
-    { name: 'Kunal Kapoor', email: 'kunal@projectflow.io', role: 'Product Manager', status: 'Busy', color: 'bg-red-500', projects: ['Project Genesis'] },
-    { name: 'Riya Sen', email: 'riya@projectflow.io', role: 'UX Researcher', status: 'Offline', color: 'bg-gray-300', projects: ['Horizon AI'] },
-    { name: 'Amitabh V.', email: 'amitabh@projectflow.io', role: 'DevOps Engineer', status: 'Online', color: 'bg-emerald-500', projects: ['Z-Cloud Engine'] }
-  ]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [selectedManageProject, setSelectedManageProject] = useState('');
+  const [selectedAddUser, setSelectedAddUser] = useState('');
+  const [selectedAddRole, setSelectedAddRole] = useState('Member');
+  const [isManagingMember, setIsManagingMember] = useState(false);
 
   const isManager = user?.role === 'Manager';
   const canManage = user?.role === 'Admin' || isManager;
@@ -45,18 +45,80 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [tasksRes, projectsRes] = await Promise.all([
+      const [tasksRes, projectsRes, usersRes] = await Promise.all([
         api.get('/tasks'),
-        api.get('/projects')
+        api.get('/projects'),
+        api.get('/projects/users')
       ]);
       setTasks(tasksRes.data);
       setProjects(projectsRes.data);
+      setAllUsers(usersRes.data);
+
+      const membersMap = new Map();
+      const colors = ['bg-amber-500', 'bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-rose-500'];
+      
+      projectsRes.data.forEach(p => {
+        if (Array.isArray(p.team_members)) {
+          p.team_members.forEach((tm, idx) => {
+            if (tm.email !== user?.email) {
+              if (!membersMap.has(tm.email)) {
+                membersMap.set(tm.email, {
+                  id: tm.id,
+                  name: tm.full_name || tm.email.split('@')[0],
+                  email: tm.email,
+                  role: tm.role || 'Member',
+                  status: 'Online',
+                  color: colors[idx % colors.length],
+                  projects: [p.name]
+                });
+              } else {
+                const existing = membersMap.get(tm.email);
+                if (!existing.projects.includes(p.name)) {
+                  existing.projects.push(p.name);
+                }
+              }
+            }
+          });
+        }
+      });
+      setTeamMembers(Array.from(membersMap.values()));
     } catch (error) {
       console.error('Error fetching dashboard data', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!selectedManageProject || !selectedAddUser) return showNotify('error', 'Please select both a project and a user');
+    setIsManagingMember(true);
+    try {
+      await api.post('/projects/members', {
+        project_id: selectedManageProject,
+        user_id: selectedAddUser,
+        role: selectedAddRole
+      });
+      showNotify('success', 'Team member added successfully!');
+      setSelectedAddUser('');
+      fetchData();
+    } catch (error) {
+      showNotify('error', 'Failed to add member: ' + error.message);
+    } finally {
+      setIsManagingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (projectId, userId) => {
+    try {
+      await api.delete(`/projects/members/${projectId}/${userId}`);
+      showNotify('success', 'Team member removed successfully');
+      fetchData();
+    } catch (error) {
+      showNotify('error', 'Failed to remove member');
+    }
+  };
+
 
   // Real admin requests
   const [adminRequests, setAdminRequests] = useState([]);
@@ -465,10 +527,13 @@ const Dashboard = () => {
 
           {/* Sidebar */}
           <div className="xl:col-span-4 space-y-8">
-             <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-8">
+              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold text-gray-900">Team Force</h3>
-                  <button className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:text-indigo-600 transition-colors">
+                  <button 
+                    onClick={() => { if (projects.length > 0) setSelectedManageProject(projects[0].id); setShowMemberModal(true); }}
+                    className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  >
                      <Plus className="w-5 h-5" />
                   </button>
                 </div>
@@ -501,12 +566,20 @@ const Dashboard = () => {
                     ))}
                   </AnimatePresence>
                 </div>
-                <button 
-                  onClick={() => setShowSyncOverlay(true)}
-                  className="w-full py-4 bg-gray-900 text-white rounded-2xl text-sm font-bold shadow-xl shadow-gray-200 hover:bg-black transition-all active:scale-95"
-                >
-                   Schedule Team Sync
-                </button>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => { if (projects.length > 0) setSelectedManageProject(projects[0].id); setShowMemberModal(true); }}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Users className="w-4 h-4" /> Manage Team Members
+                  </button>
+                  <button 
+                    onClick={() => setShowSyncOverlay(true)}
+                    className="w-full py-4 bg-gray-900 text-white rounded-2xl text-sm font-bold shadow-xl shadow-gray-200 hover:bg-black transition-all active:scale-95"
+                  >
+                     Schedule Team Sync
+                  </button>
+                </div>
              </div>
 
              {/* Quick Actions Bento */}
@@ -676,6 +749,129 @@ const Dashboard = () => {
             </div>
           )}
         </AnimatePresence>
+        {/* Manage Team Members Modal */}
+        <AnimatePresence>
+          {showMemberModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isManagingMember && setShowMemberModal(false)}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-gray-900">Manage Team Members</h3>
+                  <p className="text-gray-400 text-sm font-medium">Assign organization members to projects or adjust team roles.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Select Project</label>
+                    <select 
+                      value={selectedManageProject}
+                      onChange={(e) => setSelectedManageProject(e.target.value)}
+                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                    >
+                      {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Current Members List */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Current Members</label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {(() => {
+                        const currentProj = projects.find(p => p.id === selectedManageProject);
+                        const members = currentProj?.team_members || [];
+                        if (members.length === 0) return <p className="text-sm text-gray-400 italic p-4 bg-gray-50 rounded-2xl text-center">No team members assigned yet.</p>;
+                        return members.map(tm => (
+                          <div key={tm.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold text-sm">
+                                {tm.full_name ? tm.full_name.charAt(0) : tm.email.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">{tm.full_name || tm.email.split('@')[0]}</p>
+                                <p className="text-[10px] text-gray-400 font-medium">{tm.email} • <span className="font-bold text-indigo-600">{tm.role}</span></p>
+                              </div>
+                            </div>
+                            {tm.email !== user?.email && (
+                              <button 
+                                onClick={() => handleRemoveMember(selectedManageProject, tm.id)}
+                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                title="Remove Member"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Add New Member Form */}
+                  <form onSubmit={handleAddMember} className="space-y-4 pt-6 border-t border-gray-100">
+                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assign New Member</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Organization User</label>
+                        <select 
+                          required
+                          value={selectedAddUser}
+                          onChange={(e) => setSelectedAddUser(e.target.value)}
+                          className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                        >
+                          <option value="">Select User</option>
+                          {allUsers.map(u => (
+                            <option key={u.id} value={u.id}>{u.full_name || u.email} ({u.role})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Project Role</label>
+                        <select 
+                          value={selectedAddRole}
+                          onChange={(e) => setSelectedAddRole(e.target.value)}
+                          className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                        >
+                          <option value="Member">Member</option>
+                          <option value="Manager">Manager</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button 
+                      type="submit"
+                      disabled={isManagingMember}
+                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" /> {isManagingMember ? 'Assigning...' : 'Assign to Project'}
+                    </button>
+                  </form>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                  <button 
+                    type="button"
+                    onClick={() => setShowMemberModal(false)}
+                    className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -775,3 +971,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
