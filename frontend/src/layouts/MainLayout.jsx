@@ -25,16 +25,13 @@ const MainLayout = () => {
 
   if (user?.role === 'Admin') {
     navItems = [
-      { name: 'Global Command', path: '/admin', icon: LayoutDashboard },
-      { name: 'Users', path: '/users', icon: Users },
-      { name: 'Insights', path: '/insights', icon: PieChart },
-      { name: 'Config', path: '/settings', icon: Settings },
+      { name: 'Projects Oversight', path: '/admin', icon: Briefcase },
     ];
   } else if (user?.role === 'Manager') {
     navItems = [
-      { name: 'Operations', path: '/', icon: LayoutDashboard },
-      { name: 'Team Hub', path: '/team', icon: Users },
-      { name: 'Portfolio', path: '/projects', icon: Briefcase },
+      { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+      { name: 'Projects & Team', path: '/projects', icon: Briefcase },
+      { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     ];
   }
 
