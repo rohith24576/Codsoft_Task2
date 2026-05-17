@@ -1,12 +1,9 @@
 # 🚀 ProjectFlow | Premium Enterprise SaaS
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Portal-f59e0b?style=for-the-badge&logo=vercel&logoColor=white)](https://project-flow-ochre.vercel.app/)
-[![CodSoft](https://img.shields.io/badge/CodSoft-Task_2:_Project_Management-1e293b?style=for-the-badge)](https://project-flow-ochre.vercel.app/)
+
 
 **ProjectFlow** is a modern, high-fidelity project management and administrative oversight platform built for enterprise engineering teams. It provides a beautiful, seamless workspace that connects top-level executives, portfolio managers, and executing team members through a secure, dual-governance workflow.
 
-> 🌟 **Live Production Portal**: Explore the fully functional platform live at [https://project-flow-ochre.vercel.app/](https://project-flow-ochre.vercel.app/)
-> 🏆 **Credits**: Proudly developed as part of the **CodSoft Internship — Task 2 (Project Management Tool)**.
 
 ---
 
