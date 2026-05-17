@@ -95,7 +95,7 @@ ProjectFlow/
 - **Frontend**: React.js, Tailwind CSS, Framer Motion (Smooth Micro-Animations & Page Transitions), Lucide React (Premium Vector Icons).
 - **Backend**: Node.js, Express.js, RESTful API Architecture, JSON Web Tokens (JWT) for secure authentication, Bcryptjs for password hashing.
 - **Database**: PostgreSQL (Hosted on Supabase) featuring robust relational constraints, foreign key mappings, and cascading deletions.
-- **Deployment**: Vercel (Frontend Client) & postgreSQL&Supabase (Backend & Database).
+- **Deployment**: Vercel (Frontend Client) & postgreSQL/Supabase (Backend & Database).
 
 ---
 
