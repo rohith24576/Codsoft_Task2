@@ -28,22 +28,38 @@ const Login = () => {
   const demoAccounts = [
     { 
       role: 'Admin', 
+      name: 'Rohith (Admin)',
       email: 'admin@projectflow.io', 
       icon: ShieldCheck,
       desc: 'Full system oversight and manager control'
     },
     { 
       role: 'Manager', 
-      name: 'Rajesh Kumar',
+      name: 'Ramesh Kumar',
       email: 'manager@projectflow.io', 
       icon: KeyRound,
       desc: 'Create projects and assign team tasks'
     },
     { 
+      role: 'Manager', 
+      name: 'Suresh Sharma',
+      email: 'suresh@projectflow.io', 
+      icon: KeyRound,
+      desc: 'Portfolio management and team alignment'
+    },
+    { 
       role: 'Member', 
+      name: 'Rahul Varma',
       email: 'member@projectflow.io', 
       icon: User,
       desc: 'View tasks and update progress'
+    },
+    { 
+      role: 'Member', 
+      name: 'Mukesh Singh',
+      email: 'mukesh@projectflow.io', 
+      icon: User,
+      desc: 'Execute deliverables and log status'
     },
   ];
 
@@ -72,28 +88,30 @@ const Login = () => {
             </p>
           </motion.div>
 
-          <div className="space-y-4 max-w-md">
-            <p className="text-indigo-200 text-sm font-semibold mb-6">Select a demo account</p>
+          <div className="space-y-3 max-w-md">
+            <p className="text-indigo-200 text-sm font-semibold mb-4">Select a demo account</p>
             {demoAccounts.map((acc, idx) => (
               <motion.button
-                key={acc.role}
+                key={acc.email}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + idx * 0.1 }}
                 onClick={() => fillCredentials(acc.email)}
-                className="w-full group flex items-center justify-between p-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-left"
+                className="w-full group flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-left"
               >
-                <div className="flex items-center gap-5">
-                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                    <acc.icon className="w-6 h-6" />
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white group-hover:scale-105 transition-transform shrink-0">
+                    <acc.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-white">{acc.role}</p>
-                    <p className="text-sm text-indigo-200/70 mt-0.5">{acc.email}</p>
-                    <p className="text-xs text-indigo-300 font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity">{acc.desc}</p>
+                    <p className="text-sm font-bold text-white flex items-center gap-2">
+                       {acc.name} <span className="text-[10px] px-2 py-0.5 bg-white/20 rounded-full font-bold">{acc.role}</span>
+                    </p>
+                    <p className="text-xs text-indigo-200/80 mt-0.5">{acc.email}</p>
+                    <p className="text-[11px] text-indigo-300 font-medium mt-1 opacity-0 group-hover:opacity-100 transition-opacity line-clamp-1">{acc.desc}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-indigo-300 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all" />
+                <ArrowRight className="w-4 h-4 text-indigo-300 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all shrink-0" />
               </motion.button>
             ))}
           </div>

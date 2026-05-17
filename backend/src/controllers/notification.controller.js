@@ -35,3 +35,16 @@ export const markAllAsRead = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const createNotification = async (req, res) => {
+  try {
+    const { user_id, title, message, type } = req.body;
+    const result = await pool.query(
+      'INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4) RETURNING *',
+      [user_id, title, message, type || 'Info']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

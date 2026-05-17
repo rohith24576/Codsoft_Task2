@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Briefcase, CheckCircle2, Activity, Layers, 
   Users, Zap, Calendar, Search, Filter, ShieldCheck,
-  User, Clock, ChevronRight, X
+  User, Clock, ChevronRight, X, Send, CheckCircle2 as CheckIcon, Zap as ZapIcon, Bell
 } from 'lucide-react';
 import clsx from 'clsx';
+import CustomSelect from '../components/CustomSelect';
 
 const AdminDashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -14,6 +15,48 @@ const AdminDashboard = () => {
   const [filter, setFilter] = useState('All'); // 'All', 'Completed', 'In Progress', 'Planning'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
+  const [adminMessage, setAdminMessage] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState('All');
+  const [isSendingDirective, setIsSendingDirective] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const showNotify = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleSendDirective = async (e) => {
+    e.preventDefault();
+    if (!adminMessage.trim()) return showNotify('error', 'Please enter a message directive');
+    setIsSendingDirective(true);
+    try {
+      const recipients = selectedRecipient === 'All' 
+        ? (selectedProject?.team_members || [])
+        : [{ id: selectedRecipient }];
+
+      if (recipients.length === 0) {
+        showNotify('error', 'No assigned team members to notify');
+        setIsSendingDirective(false);
+        return;
+      }
+
+      await Promise.all(recipients.map(user => 
+        api.post('/notifications', {
+          user_id: user.id,
+          title: `Admin Directive: ${selectedProject?.name}`,
+          message: adminMessage.trim(),
+          type: 'Request'
+        })
+      ));
+
+      showNotify('success', 'Admin directive successfully dispatched to team members!');
+      setAdminMessage('');
+    } catch (error) {
+      showNotify('error', error.response?.data?.message || 'Failed to dispatch directive');
+    } finally {
+      setIsSendingDirective(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -320,6 +363,57 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              {/* Dispatch Admin Directive Form */}
+              <div className="space-y-4 pt-6 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                    <Send className="w-4 h-4 text-indigo-600" /> Dispatch Admin Directive
+                  </h4>
+                  <span className="text-xs font-bold text-gray-400">Direct Communication</span>
+                </div>
+
+                <form onSubmit={handleSendDirective} className="space-y-4 bg-indigo-50/30 p-6 rounded-3xl border border-indigo-100/60 shadow-inner">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <CustomSelect 
+                        label="Select Recipient(s)"
+                        value={selectedRecipient}
+                        onChange={setSelectedRecipient}
+                        options={[
+                          { value: 'All', label: 'All Assigned Team Members', badge: 'Broadcast' },
+                          ...(Array.isArray(selectedProject.team_members) ? selectedProject.team_members.map(tm => ({
+                            value: tm.id,
+                            label: tm.full_name || tm.email.split('@')[0],
+                            sublabel: tm.role,
+                            badge: tm.role
+                          })) : [])
+                        ]}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-indigo-900 uppercase tracking-widest ml-1">Directive Message</label>
+                    <textarea 
+                      required
+                      rows={3}
+                      value={adminMessage}
+                      onChange={(e) => setAdminMessage(e.target.value)}
+                      placeholder="Enter directive instructions, feedback, or required changes..."
+                      className="w-full bg-white border border-indigo-100 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none resize-none shadow-sm"
+                    ></textarea>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={isSendingDirective}
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" /> {isSendingDirective ? 'Dispatching Directive...' : 'Send Directive to Team'}
+                  </button>
+                </form>
+              </div>
+
               {/* Modal Footer */}
               <div className="pt-6 border-t border-gray-100 flex justify-end">
                 <button 
@@ -332,6 +426,28 @@ const AdminDashboard = () => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Notification Toast */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className={clsx(
+              "fixed bottom-8 left-1/2 z-[200] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-md min-w-[300px]",
+              notification.type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' :
+              notification.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' :
+              'bg-indigo-600/90 border-indigo-500 text-white'
+            )}
+          >
+             {notification.type === 'success' && <CheckIcon className="w-5 h-5" />}
+             {notification.type === 'error' && <ZapIcon className="w-5 h-5" />}
+             {notification.type === 'info' && <Bell className="w-5 h-5" />}
+             <p className="text-sm font-bold">{notification.message}</p>
+          </motion.div>
         )}
       </AnimatePresence>
 
