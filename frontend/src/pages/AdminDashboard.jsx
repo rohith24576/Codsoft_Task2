@@ -59,10 +59,10 @@ const AdminDashboard = () => {
         <div className="relative z-10 space-y-6 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 border border-white/10">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Executive Oversight Command
+            Executive Portal
           </div>
           <div className="space-y-2">
-            <h2 className="text-5xl font-black tracking-tighter text-white">Global Projects Roster</h2>
+            <h2 className="text-5xl font-black tracking-tighter text-white">Projects Oversight</h2>
             <p className="text-gray-300 text-lg font-medium leading-relaxed">
               Welcome, Administrator. You have full read-only oversight across all <span className="text-white font-bold">{projects.length} strategic initiatives</span> and active team member allocations.
             </p>
@@ -207,7 +207,7 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Comprehensive Project Details & Team Roster Modal */}
+      {/* Comprehensive Project Details Modal */}
       <AnimatePresence>
         {selectedProject && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -284,10 +284,10 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Comprehensive Team Roster */}
+              {/* Assigned Team Members */}
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assigned Team Roster</h4>
+                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Assigned Team Members</h4>
                   <span className="text-xs font-bold text-gray-400">Read-Only Oversight</span>
                 </div>
 
