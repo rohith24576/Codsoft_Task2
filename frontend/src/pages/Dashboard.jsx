@@ -550,7 +550,7 @@ const Dashboard = () => {
                             icon: CheckCircle2,
                             color: 'text-emerald-500',
                             bg: 'bg-emerald-50',
-                            text: `${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'} completed "${t.title}"`,
+                            text: `${t.assignee_name || 'Team member'} completed "${t.title}"`,
                             time: t.updated_at || t.created_at || new Date(),
                             label: 'Task Completed'
                           });
@@ -560,7 +560,7 @@ const Dashboard = () => {
                             icon: ListTodo,
                             color: 'text-purple-500',
                             bg: 'bg-purple-50',
-                            text: `"${t.title}" is now In Progress by ${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'}`,
+                            text: `"${t.title}" is now In Progress by ${t.assignee_name || 'Team member'}`,
                             time: t.updated_at || t.created_at || new Date(),
                             label: 'Task Active'
                           });
@@ -570,7 +570,7 @@ const Dashboard = () => {
                             icon: Plus,
                             color: 'text-indigo-500',
                             bg: 'bg-indigo-50',
-                            text: `New task "${t.title}" assigned to ${t.assigned_to?.full_name || t.assigned_to?.email?.split('@')[0] || 'Team member'}`,
+                            text: `New task "${t.title}" assigned to ${t.assignee_name || 'Team member'}`,
                             time: t.created_at || new Date(),
                             label: 'Task Created'
                           });
@@ -1314,13 +1314,82 @@ const Dashboard = () => {
 
         <div className="space-y-6">
           <h3 className="text-lg font-bold text-gray-900 tracking-tight">Team activity</h3>
-          <div className="bg-white border border-gray-100 rounded-3xl p-8 text-center shadow-sm">
-             <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
-                <Users className="w-6 h-6 text-indigo-500" />
-             </div>
-             <p className="text-sm font-medium text-gray-500 leading-relaxed">
-               View team updates and real-time progress.
-             </p>
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+            <div className="space-y-6 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-px before:bg-gray-100 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+              {(() => {
+                const acts = [];
+                tasks.forEach(t => {
+                  if (t.status === 'Done') {
+                    acts.push({
+                      id: `task-done-${t.id}`,
+                      icon: CheckCircle2,
+                      color: 'text-emerald-500',
+                      bg: 'bg-emerald-50',
+                      text: `${t.assignee_name || 'Team member'} completed "${t.title}"`,
+                      time: t.updated_at || t.created_at || new Date(),
+                      label: 'Task Completed'
+                    });
+                  } else if (t.status === 'In Progress') {
+                    acts.push({
+                      id: `task-prog-${t.id}`,
+                      icon: ListTodo,
+                      color: 'text-purple-500',
+                      bg: 'bg-purple-50',
+                      text: `"${t.title}" is now In Progress by ${t.assignee_name || 'Team member'}`,
+                      time: t.updated_at || t.created_at || new Date(),
+                      label: 'Task Active'
+                    });
+                  } else {
+                    acts.push({
+                      id: `task-new-${t.id}`,
+                      icon: Plus,
+                      color: 'text-indigo-500',
+                      bg: 'bg-indigo-50',
+                      text: `New task "${t.title}" assigned to ${t.assignee_name || 'Team member'}`,
+                      time: t.created_at || new Date(),
+                      label: 'Task Created'
+                    });
+                  }
+                });
+
+                acts.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                if (acts.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-gray-400">
+                      <Activity className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                      <p className="text-xs font-medium">No recent team activity</p>
+                    </div>
+                  );
+                }
+
+                return acts.slice(0, 5).map((act) => {
+                  const diffMs = new Date() - new Date(act.time);
+                  const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+                  const diffHours = Math.floor(diffMins / 60);
+                  const diffDays = Math.floor(diffHours / 24);
+                  let timeStr = 'Just now';
+                  if (diffDays > 0) timeStr = `${diffDays}d ago`;
+                  else if (diffHours > 0) timeStr = `${diffHours}h ago`;
+                  else if (diffMins > 0) timeStr = `${diffMins}m ago`;
+
+                  return (
+                    <div key={act.id} className="flex gap-4 relative z-10 items-start group text-left">
+                      <div className={clsx("w-6 h-6 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110 mt-0.5", act.bg)}>
+                        <act.icon className={clsx("w-3.5 h-3.5", act.color)} />
+                      </div>
+                      <div className="space-y-1 flex-1">
+                        <p className="text-xs font-bold text-gray-900 leading-snug group-hover:text-indigo-600 transition-colors">{act.text}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-gray-400 font-bold">{timeStr}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-gray-500 font-semibold">{act.label}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           </div>
         </div>
       </div>

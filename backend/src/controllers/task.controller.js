@@ -49,13 +49,22 @@ export const getTasks = async (req, res) => {
 export const updateTask = async (req, res) => {
   const { title, description, status, priority, assignee_id, deadline } = req.body;
   try {
-    const result = await pool.query(
-      'UPDATE tasks SET title = $1, description = $2, status = $3, priority = $4, assignee_id = $5, deadline = $6 WHERE id = $7 RETURNING *',
-      [title, description, status, priority, assignee_id, deadline, req.params.id]
-    );
-    if (result.rows.length === 0) {
+    const existing = await pool.query('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
+    if (existing.rows.length === 0) {
       return res.status(404).json({ message: 'Task not found' });
     }
+    const task = existing.rows[0];
+    const newTitle = title !== undefined ? title : task.title;
+    const newDescription = description !== undefined ? description : task.description;
+    const newStatus = status !== undefined ? status : task.status;
+    const newPriority = priority !== undefined ? priority : task.priority;
+    const newAssigneeId = assignee_id !== undefined ? assignee_id : task.assignee_id;
+    const newDeadline = deadline !== undefined ? deadline : task.deadline;
+
+    const result = await pool.query(
+      'UPDATE tasks SET title = $1, description = $2, status = $3, priority = $4, assignee_id = $5, deadline = $6 WHERE id = $7 RETURNING *',
+      [newTitle, newDescription, newStatus, newPriority, newAssigneeId, newDeadline, req.params.id]
+    );
     res.json(result.rows[0]);
   } catch (error) {
     res.status(400).json({ message: error.message });

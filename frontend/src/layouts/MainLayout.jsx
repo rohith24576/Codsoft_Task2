@@ -137,7 +137,7 @@ const MainLayout = () => {
                         </div>
                         <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100/60">
                            <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Member Since</span>
-                           <span className="font-bold text-gray-700">Oct 2026</span>
+                           <span className="font-bold text-gray-700">Oct 2025</span>
                         </div>
                       </div>
 

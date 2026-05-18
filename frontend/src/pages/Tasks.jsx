@@ -15,6 +15,7 @@ const Tasks = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newTask, setNewTask] = useState({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '', assignee_id: '' });
 
   const fetchTasks = async () => {
@@ -89,7 +90,7 @@ const Tasks = () => {
       {/* Kanban Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Project Kanban</h2>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Task Flow</h2>
           <p className="text-sm text-gray-500 font-medium">Coordinate deliverables and track velocity across all initiatives.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -97,8 +98,10 @@ const Tasks = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="pl-11 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold focus: focus:ring-indigo-500 outline-none w-64 shadow-sm"
+              className="pl-11 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none w-64 shadow-sm"
             />
           </div>
           <button 
@@ -113,7 +116,14 @@ const Tasks = () => {
       {/* Kanban Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {columns.map(col => {
-          const colTasks = tasks.filter(t => t.status === col.id);
+          const colTasks = tasks.filter(t => {
+            const matchesStatus = t.status === col.id;
+            const matchesSearch = searchQuery.trim() === '' || 
+              t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+              (t.assignee_name && t.assignee_name.toLowerCase().includes(searchQuery.toLowerCase()));
+            return matchesStatus && matchesSearch;
+          });
           return (
             <div key={col.id} className="bg-gray-50/50 border border-gray-100/80 rounded-[2.5rem] p-6 space-y-6 flex flex-col min-h-[650px] shadow-xs">
               <div className="flex items-center justify-between px-2">

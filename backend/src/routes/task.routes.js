@@ -10,6 +10,7 @@ router.route('/')
 
 router.route('/:id')
   .put(authenticateToken, updateTask)
+  .patch(authenticateToken, updateTask)
   .delete(authenticateToken, deleteTask);
 
 export default router;
