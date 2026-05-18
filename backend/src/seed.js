@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const seedWorkspace = async () => {
   try {
-    const password = await bcrypt.hash('password123', 10);
+    const password = await bcrypt.hash('projectflow123', 10);
     
     console.log('⏳ Updating your Royal Workspace with Gmail accounts...');
 

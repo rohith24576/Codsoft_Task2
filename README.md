@@ -105,11 +105,11 @@ Want to test the platform immediately? We have set up 5 pre-configured demo acco
 
 | Full Name | Role | Email Address | Default Password | Access Tier |
 | :--- | :--- | :--- | :--- | :--- |
-| **Rohith (Admin)** | `Admin` | `admin@projectflow.io` | `password123` | Executive Oversight |
-| **Ramesh Kumar** | `Manager` | `manager@projectflow.io` | `password123` | Portfolio Management |
-| **Suresh Sharma** | `Manager` | `suresh@projectflow.io` | `password123` | Portfolio Management |
-| **Rahul Varma** | `Member` | `member@projectflow.io` | `password123` | General Access |
-| **Mukesh Singh** | `Member` | `mukesh@projectflow.io` | `password123` | General Access |
+| **Rohith (Admin)** | `Admin` | `admin@projectflow.io` | `projectflow123` | Executive Oversight |
+| **Ramesh Kumar** | `Manager` | `manager@projectflow.io` | `projectflow123` | Portfolio Management |
+| **Suresh Sharma** | `Manager` | `suresh@projectflow.io` | `projectflow123` | Portfolio Management |
+| **Rahul Varma** | `Member` | `member@projectflow.io` | `projectflow123` | General Access |
+| **Mukesh Singh** | `Member` | `mukesh@projectflow.io` | `projectflow123` | General Access |
 
 ---
 
@@ -174,7 +174,7 @@ Follow these simple steps to run ProjectFlow on your local machine:
 3. Copy the entire contents of `database.sql` from this repository and run it.
 
 > [!IMPORTANT]
-> The `database.sql` script uses `ON CONFLICT (id) DO UPDATE` to ensure that all 5 demo accounts (including Suresh and Mukesh) are correctly created with their encrypted `password123` credentials.
+> The `database.sql` script uses `ON CONFLICT (id) DO UPDATE` to ensure that all 5 demo accounts (including Suresh and Mukesh) are correctly created with their encrypted `projectflow123` credentials.
 
 ### 2. Environment Configuration
 Create a `.env` file inside both the `backend` and `frontend` folders:

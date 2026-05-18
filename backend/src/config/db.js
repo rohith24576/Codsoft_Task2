@@ -14,5 +14,9 @@ const pool = new Pool({
   }
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client (Supabase connection reset):', err.message);
+});
+
 export const query = (text, params) => pool.query(text, params);
 export default pool;

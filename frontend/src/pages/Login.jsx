@@ -65,7 +65,7 @@ const Login = () => {
 
   const fillCredentials = (accEmail) => {
     setEmail(accEmail);
-    setPassword('password123');
+    setPassword('projectflow123');
   };
 
   return (
@@ -117,7 +117,7 @@ const Login = () => {
           </div>
 
           <div className="mt-12 pt-8 border-t border-white/5">
-            <p className="text-sm font-medium text-indigo-200">Default password: <span className="text-white font-semibold">password123</span></p>
+            <p className="text-sm font-medium text-indigo-200">Default password: <span className="text-white font-semibold">projectflow123</span></p>
           </div>
         </div>
       </div>
