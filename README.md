@@ -113,6 +113,40 @@ Want to test the platform immediately? We have set up 5 pre-configured demo acco
 
 ---
 
+## 🚀 5-Minute Quickstart Onboarding Walkthrough
+
+New to ProjectFlow? Follow this quick 3-step roadmap to experience the full power of our dual-governance architecture in under 5 minutes:
+
+### 👑 Step 1: Explore Executive Oversight (Admin)
+1. On the login page, click the **Rohith (Admin)** card to auto-fill credentials and click **Sign in**.
+2. Explore the high-level executive metrics and company-wide analytics on the dashboard.
+3. Click **Broadcast Announcement** to dispatch an urgent, top-down Admin Directive to the entire organization.
+
+### 💼 Step 2: Manage Portfolios & Directives (Manager)
+1. Click your profile avatar in the top right and select **Switch Account** (or log out).
+2. Click the **Ramesh Kumar (Manager)** card to log in.
+3. Notice the unread notification bell—click it to see the Admin Directive you just dispatched!
+4. Review pending administrative requests or create a new project deliverable for your team.
+
+### 👥 Step 3: Execute Work in Motion (Member)
+1. Switch accounts to **Rahul Varma (Member)**.
+2. Navigate to the **Task Flow** board.
+3. Drag or move an assigned task from `To Do` to `In Progress` or `Done`.
+4. Check the dashboard to see your live update instantly logged in the real-time **Team Activity** stream!
+
+---
+
+## 💡 Pro-Tips & Hidden Gems for New Users
+
+Make the most out of your ProjectFlow workspace with these built-in power features:
+
+- 🪄 **One-Click Auto-Fill**: Never waste time typing test credentials. Simply clicking any demo profile card on the `/login` screen instantly populates the correct email and `projectflow123` password.
+- ⚡ **Real-Time System Activity**: Keep an eye on the System Activity feed on the main dashboard. It dynamically updates instantly whenever any user creates a project, completes a task, or approves an override proposal.
+- 🔔 **Instant Notification Center**: Admin Directives and system alerts are pushed instantly to the user's notification panel without requiring a page refresh.
+- 🎨 **Concentric Design Hierarchy**: Look out for the premium Gold & Charcoal glassmorphic bento grids that adapt layout density based on whether you are logged in as an Admin, Manager, or Member.
+
+---
+
 ## 📡 API Reference
 
 ### Authentication (`/api/auth`)
