@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, Info, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Bell, Info, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import api from '../services/api';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,12 +15,13 @@ const NotificationCenter = () => {
       const res = await api.get('/notifications');
       setNotifications(res.data);
       setUnreadCount(res.data.filter(n => !n.is_read).length);
-    } catch (error) {
+    } catch {
       console.error('Failed to fetch notifications');
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
     return () => clearInterval(interval);
@@ -31,7 +32,7 @@ const NotificationCenter = () => {
       await api.patch(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
+    } catch {
       console.error('Failed to mark read');
     }
   };
@@ -41,7 +42,7 @@ const NotificationCenter = () => {
       await api.patch('/notifications/read-all');
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
-    } catch (error) {
+    } catch {
       console.error('Failed to mark all read');
     }
   };

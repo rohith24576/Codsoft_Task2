@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, CheckSquare, Briefcase, LogOut, Users, ChevronDown, Bell, Settings, PieChart, Layers } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Briefcase, LogOut, ChevronDown, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import NotificationCenter from '../components/NotificationCenter';
 

@@ -5,7 +5,7 @@ import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, ListTodo, Layers, CheckCircle2, ChevronRight, Activity, 
-  Users, Trash2, Clock, Target, ArrowUpRight, Search, 
+  Users, Trash2, Clock, Target, ArrowUpRight, 
   MoreVertical, UserPlus, Zap, Bell, Calendar
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -14,10 +14,6 @@ import CustomSelect from '../components/CustomSelect';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  if (user?.role === 'Admin') {
-    return <Navigate to="/admin" replace />;
-  }
 
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -62,11 +58,6 @@ const Dashboard = () => {
     setDeadlineData({ project_id: '', milestone: '', new_date: '', rationale: '' });
   };
 
-  // Live states for demo
-  const [requests, setRequests] = useState([
-    { id: 1, name: 'Arjun Mehra', email: 'arjun@projectflow.io', role: 'UI Designer' },
-    { id: 2, name: 'Sanya Malhotra', email: 'sanya@projectflow.io', role: 'React Developer' }
-  ]);
   const [allUsers, setAllUsers] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [showMemberModal, setShowMemberModal] = useState(false);
@@ -76,7 +67,6 @@ const Dashboard = () => {
   const [isManagingMember, setIsManagingMember] = useState(false);
 
   const isManager = user?.role === 'Manager';
-  const canManage = user?.role === 'Admin' || isManager;
 
   const fetchData = async () => {
     try {
@@ -149,7 +139,7 @@ const Dashboard = () => {
       await api.delete(`/projects/members/${projectId}/${userId}`);
       showNotify('success', 'Team member removed successfully');
       fetchData();
-    } catch (error) {
+    } catch {
       showNotify('error', 'Failed to remove member');
     }
   };
@@ -168,8 +158,12 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-    if (isManager) fetchAdminRequests();
+    if (isManager) {
+      fetchAdminRequests();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isManager]);
 
   const handleAdminRequest = async (id, status) => {
@@ -178,7 +172,7 @@ const Dashboard = () => {
       setAdminRequests(prev => prev.filter(r => r.id !== id));
       showNotify(status === 'Approved' ? 'success' : 'info', `Request ${status.toLowerCase()} successfully.`);
       fetchData(); // Refresh projects to see changes
-    } catch (error) {
+    } catch {
       showNotify('error', 'Failed to handle request');
     }
   };
@@ -206,10 +200,14 @@ const Dashboard = () => {
       await api.delete(`/projects/${id}`);
       setProjects(projects.filter(p => p.id !== id));
       showNotify('success', 'Project removed from system');
-    } catch (error) {
+    } catch {
       showNotify('error', 'Failed to delete project');
     }
   };
+
+  if (user?.role === 'Admin') {
+    return <Navigate to="/admin" replace />;
+  }
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -318,7 +316,7 @@ const Dashboard = () => {
           </div>
           <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
             <AnimatePresence>
-              {teamMembers.map((member, i) => (
+              {teamMembers.map((member) => (
                 <motion.div 
                   layout
                   key={member.email} 
@@ -490,7 +488,7 @@ const Dashboard = () => {
                           <p className="text-xs font-bold text-gray-400">No pending approvals</p>
                        </div>
                      ) : (
-                       adminRequests.map((req, i) => (
+                       adminRequests.map((req) => (
                          <motion.div 
                            layout
                            key={req.id} 
@@ -646,7 +644,7 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-6">
                   <AnimatePresence mode="popLayout">
-                    {teamMembers.map((member, i) => (
+                    {teamMembers.map((member) => (
                       <motion.div 
                         layout
                         key={member.email} 

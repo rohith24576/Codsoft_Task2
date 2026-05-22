@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Briefcase, CheckCircle2, Activity, Layers, 
-  Users, Zap, Calendar, Search, Filter, ShieldCheck,
-  User, Clock, ChevronRight, X, Send, CheckCircle2 as CheckIcon, Zap as ZapIcon, Bell
+  Briefcase, Layers, 
+  Users, Zap, Calendar, Search, ShieldCheck,
+  Clock, ChevronRight, X, Send, CheckCircle2 as CheckIcon, Zap as ZapIcon, Bell
 } from 'lucide-react';
 import clsx from 'clsx';
 import CustomSelect from '../components/CustomSelect';

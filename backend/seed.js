@@ -15,19 +15,31 @@ const seedUsers = async () => {
     const users = [
       {
         email: 'admin@projectflow.io',
-        full_name: 'System Administrator',
+        full_name: 'Rohith (Admin)',
         password: hashedPassword,
         role: 'Admin'
       },
       {
         email: 'manager@projectflow.io',
-        full_name: 'Rajesh Kumar',
+        full_name: 'Ramesh Kumar',
+        password: hashedPassword,
+        role: 'Manager'
+      },
+      {
+        email: 'suresh@projectflow.io',
+        full_name: 'Suresh Sharma',
         password: hashedPassword,
         role: 'Manager'
       },
       {
         email: 'member@projectflow.io',
-        full_name: 'Team Member',
+        full_name: 'Rahul Varma',
+        password: hashedPassword,
+        role: 'Member'
+      },
+      {
+        email: 'mukesh@projectflow.io',
+        full_name: 'Mukesh Singh',
         password: hashedPassword,
         role: 'Member'
       }

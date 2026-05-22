@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { 
-  Plus, Search, Filter, MoreHorizontal, 
-  Calendar, Flag, Layers, CheckCircle2,
+  Plus, Search, Layers, CheckCircle2,
   Clock, AlertCircle, Trash2, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,6 +35,7 @@ const Tasks = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks();
   }, []);
 
@@ -43,7 +43,7 @@ const Tasks = () => {
     try {
       await api.patch(`/tasks/${taskId}`, { status: newStatus });
       setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-    } catch (error) {
+    } catch {
       console.error('Failed to update status');
     }
   };
@@ -55,7 +55,7 @@ const Tasks = () => {
       setShowCreateModal(false);
       setNewTask({ title: '', description: '', project_id: '', priority: 'Medium', status: 'To Do', deadline: '', assignee_id: '' });
       fetchTasks();
-    } catch (error) {
+    } catch {
       console.error('Failed to create task');
     }
   };
@@ -64,7 +64,7 @@ const Tasks = () => {
     try {
       await api.delete(`/tasks/${id}`);
       setTasks(tasks.filter(t => t.id !== id));
-    } catch (error) {
+    } catch {
       console.error('Failed to delete task');
     }
   };

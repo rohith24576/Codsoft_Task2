@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Layers, Users, Calendar, Trash2, UserPlus, CheckCircle2, Zap, Bell } from 'lucide-react';
+import { Layers, Users, Calendar, Trash2, UserPlus, CheckCircle2, Zap, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import clsx from 'clsx';
@@ -25,10 +25,6 @@ const Projects = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
   const fetchProjects = async () => {
     try {
       const [projRes, usersRes] = await Promise.all([
@@ -46,6 +42,11 @@ const Projects = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProjects();
+  }, []);
 
   const handleAddMember = async (e) => {
     e.preventDefault();

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
@@ -14,7 +15,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const res = await api.get('/auth/profile');
           setUser(res.data);
-        } catch (err) {
+        } catch {
           localStorage.removeItem('supabase_token');
         }
       }
@@ -41,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     // Backend logout is just a courtesy since it's JWT
-    try { await api.post('/auth/logout'); } catch (e) {}
+    try { await api.post('/auth/logout'); } catch { /* ignore */ }
     localStorage.removeItem('supabase_token');
     setUser(null);
   };
